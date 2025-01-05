@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model User {
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
+  name         String
+  photo        String        @default("https://scontent.fpkr1-1.fna.fbcdn.net/v/t1.30497-1/453178253_471506465671661_2781666950760530985_n.png?stp=dst-png_s200x200&_nc_cat=1&ccb=1-7&_nc_sid=136b72&_nc_ohc=PChT7-OSFhoQ7kNvgHZxP9w&_nc_oc=AdgyGq5XIJO2WSdLg4aUhC_uAXnNiXFKfN3dvRozJLAWoJtcK99CqxMX5hepMqpljFo&_nc_zt=24&_nc_ht=scontent.fpkr1-1.fna&_nc_gid=AQXhB9P6oP4STz7pxSUCEZu&oh=00_AYAilRkKDIVZO8qaRCXN9iLhGYOZdcDQMPz5p0NdZLnGhQ&oe=67938D7A")
+  password     String
+  auctionItems AuctionItems[]
+  bids Bids[]
+  notifications Notification[]
+ }
+model AuctionItems {
+  id           Int           @id @default(autoincrement())
+  startingPrice Int
+  name         String
+  description  String
+  deadline     DateTime
+  bids         Bids[]
+  photo        String
+  userId       Int
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   Category
+  notification Notification[]
+}
+enum Category {
+  ELECTRONICS
+  VEHICLES
+  FASHION
+  ART
+  SPORTS
+  BOOKS
+  TOYS
+  TOOLS
+  OTHERS
+}
+
+ 
+ model Bids{
+   id         Int            @id @default(autoincrement())
+   price Int
+   userId Int
+   auctionId Int
+   auction    AuctionItems   @relation(fields: [auctionId], references: [id], onDelete: Cascade) 
+   user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+ }
+ model Notification{
+  id         Int            @id @default(autoincrement())
+  userId     Int
+  user User @relation(fields: [userId],references: [id],onDelete: Cascade)
+  auctionId Int
+  auction AuctionItems @relation(fields: [auctionId],references: [id],onDelete: Cascade)
+  seen Boolean
+ }

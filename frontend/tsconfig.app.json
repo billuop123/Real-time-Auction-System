@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "jsx": "react-jsx", // Ensures JSX syntax works
+    "module": "esnext", // Enables ES module syntax
+    "moduleResolution": "node", // Resolves modules like Node.js
+    "target": "es6", // Specifies ES6+ as the target output
+    "strict": true, // Enables strict type-checking
+    "esModuleInterop": true, // Ensures compatibility with CommonJS
+    "skipLibCheck": true, // Skips type checks for library files
+    "allowSyntheticDefaultImports": true, // Allows default imports for modules without them
+    "resolveJsonModule": true // Allows importing JSON files
+  },
+  "include": ["src"], // Ensure TypeScript processes files in the src folder
+  "exclude": ["node_modules", "dist"] // Exclude unnecessary directories
+}

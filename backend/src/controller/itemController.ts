@@ -97,6 +97,7 @@ export const getItem = async (req: any, res: any) => {
       deadline: true,
       photo: true,
       userId: true,
+      status: true,
       user: {
         select: {
           name: true,

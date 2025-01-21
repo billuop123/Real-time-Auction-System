@@ -1,12 +1,18 @@
 import axios from "axios";
 import express from "express";
 import { redirect } from "react-router-dom";
+import { prisma } from "../prismaClient";
 export const khaltiRouter = express();
-khaltiRouter.post("/create", (req, res) => {
-  //   const { amount, purchase_order_id } = req.body;
-  //   console.log(purchase_order_id, amount);
-  const { amount, products } = JSON.parse(JSON.stringify(req.body));
-
+khaltiRouter.post("/create", async (req, res) => {
+  const { amount, products, auctionId } = JSON.parse(JSON.stringify(req.body));
+  await prisma.auctionItems.update({
+    where: {
+      id: auctionId,
+    },
+    data: {
+      status: "SOLD",
+    },
+  });
   const formData = {
     return_url: "http://localhost:5173",
     website_url: "http://localhost:5173",

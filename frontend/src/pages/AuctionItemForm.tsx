@@ -3,7 +3,6 @@ import "react-calendar/dist/Calendar.css";
 import DatePicker from "react-date-picker";
 import "react-date-picker/dist/DatePicker.css";
 import { Value } from "react-date-picker/dist/cjs/shared/types";
-// export type Value = Date | Date[] | string | null; // Customize based on your requirements
 
 import {
   FaAlignLeft,
@@ -50,10 +49,10 @@ const AuctionItemForm: React.FC<AuctionItemFormProps> = ({ onSubmit }) => {
   ];
 
   const handleCategoryChange = (e: any) => {
-    const selectedValue = e.target.value; // Get the selected value from the event
+    const selectedValue = e.target.value;
     setFormData((prev) => ({
-      ...prev, // Spread the previous state
-      selectedCategory: selectedValue, // Update the selectedCategory field
+      ...prev,
+      selectedCategory: selectedValue,
     }));
   };
 
@@ -63,7 +62,6 @@ const AuctionItemForm: React.FC<AuctionItemFormProps> = ({ onSubmit }) => {
     [key: string]: string;
   }>({});
 
-  // Validation logic
   useEffect(() => {
     const errors: { [key: string]: string } = {};
     const now = new Date();
@@ -339,9 +337,6 @@ const AuctionItemForm: React.FC<AuctionItemFormProps> = ({ onSubmit }) => {
               </label>
             </div>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                $
-              </span>
               <input
                 type="number"
                 name="startingPrice"

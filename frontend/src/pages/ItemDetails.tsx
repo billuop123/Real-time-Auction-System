@@ -37,6 +37,7 @@ interface Item {
   photo: string;
   userId: number;
   user: User;
+  status: string;
 }
 
 export const ItemDetails = function () {
@@ -68,9 +69,8 @@ export const ItemDetails = function () {
       } = await axios.post("http://localhost:3001/api/v1/user/loggedIn", {
         jwtR: jwt,
       });
-      console.log(status);
+
       if (!status) {
-        console.log("This is being called");
         navigate("/signin");
       }
       setIsLoggedIn(status);
@@ -125,7 +125,7 @@ export const ItemDetails = function () {
     };
 
     return () => newSocket.close();
-  }, [id]); // Removed dependencies for better sequential execution
+  }, [id]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -192,13 +192,13 @@ export const ItemDetails = function () {
     const url = "http://localhost:3001/api/v1/khalti/create";
     const data = {
       amount: Number(highestPrice),
+      auctionId: Number(id),
       products: [
         { product: item.name, amount: Number(highestPrice), quantity: 1 },
       ],
       payment_method: "khalti",
     };
     try {
-      console.log(JSON.stringify(data));
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -206,18 +206,6 @@ export const ItemDetails = function () {
         },
         body: JSON.stringify(data),
       });
-      // const response = await axios.post(
-      //   url,
-      //   {
-      //     body: JSON.stringify(data), // No need to stringify
-      //   },
-      //   {
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //     },
-      //   }
-      // );
-
       if (response.ok) {
         const responseData = await response.json();
         console.log(responseData.data);
@@ -302,6 +290,7 @@ export const ItemDetails = function () {
 
   return (
     <>
+      {item.status === "SOLD" ? `item is sold to ${highestBidder?.name}` : ""}
       {showBidInput && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm"
@@ -494,7 +483,9 @@ export const ItemDetails = function () {
 
                   <span>Place Bid</span>
                 </button>
-                {Number(highestBidder?.id) === Number(userId) && isDisabled ? (
+                {Number(highestBidder?.id) === Number(userId) &&
+                isDisabled &&
+                !(item.status === "SOLD") ? (
                   <button onClick={handleClick}>Buy item</button>
                 ) : (
                   ""

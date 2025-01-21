@@ -45,7 +45,6 @@ export const Userprofile = () => {
         setPhoto(photo);
       } catch (error) {
         console.error("Error fetching user profile:", error);
-        // Optional: Add error toast or notification
       } finally {
         setIsLoading(false);
       }
@@ -70,7 +69,6 @@ export const Userprofile = () => {
       } catch (error) {
         console.error("Error updating profile picture:", error);
         toast.error("Failed to update profile picture!");
-        // Optional: Add error toast or notification
       } finally {
         setIsLoading(false);
       }

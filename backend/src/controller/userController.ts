@@ -1,5 +1,4 @@
 import { prisma } from "../prismaClient";
-import jwt from "jsonwebtoken";
 export const getUserInfo = async (req: any, res: any) => {
   const { userId } = req.body;
   const userInfo = await prisma.user.findFirst({

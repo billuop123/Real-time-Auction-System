@@ -101,6 +101,7 @@ const getItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             deadline: true,
             photo: true,
             userId: true,
+            status: true,
             user: {
                 select: {
                     name: true,

@@ -31,6 +31,8 @@ model AuctionItems {
   bids         Bids[]
   photo        String
   userId       Int
+ status Status @default(PENDING)
+
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   category   Category
   notification Notification[]
@@ -46,7 +48,11 @@ enum Category {
   TOOLS
   OTHERS
 }
-
+enum Status{
+  PENDING
+  SOLD
+  UNSOLD
+}
  
  model Bids{
    id         Int            @id @default(autoincrement())

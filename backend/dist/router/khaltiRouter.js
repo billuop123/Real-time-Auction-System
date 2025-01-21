@@ -16,11 +16,18 @@ exports.khaltiRouter = void 0;
 const axios_1 = __importDefault(require("axios"));
 const express_1 = __importDefault(require("express"));
 const react_router_dom_1 = require("react-router-dom");
+const prismaClient_1 = require("../prismaClient");
 exports.khaltiRouter = (0, express_1.default)();
-exports.khaltiRouter.post("/create", (req, res) => {
-    //   const { amount, purchase_order_id } = req.body;
-    //   console.log(purchase_order_id, amount);
-    const { amount, products } = JSON.parse(JSON.stringify(req.body));
+exports.khaltiRouter.post("/create", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { amount, products, auctionId } = JSON.parse(JSON.stringify(req.body));
+    yield prismaClient_1.prisma.auctionItems.update({
+        where: {
+            id: auctionId,
+        },
+        data: {
+            status: "SOLD",
+        },
+    });
     const formData = {
         return_url: "http://localhost:5173",
         website_url: "http://localhost:5173",
@@ -29,7 +36,7 @@ exports.khaltiRouter.post("/create", (req, res) => {
         purchase_order_name: products[0].product,
     };
     callKhalti(formData, req, res);
-});
+}));
 const callKhalti = (formData, req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const headers = {
         Authorization: `Key ${process.env.KHALTI_SECRET_KEY}`,

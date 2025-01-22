@@ -33,7 +33,7 @@ export const allItems = async (req: any, res: any) => {
   const { search, category } = req.query;
   if (!search && !category) {
     const allItems = await prisma.auctionItems.findMany({});
-    console.log(allItems);
+
     return res.json({
       allItems,
     });
@@ -68,7 +68,6 @@ export const allItems = async (req: any, res: any) => {
     });
   }
   if (search && category) {
-    console.log(search, category.toUpperCase());
     const items = await prisma.auctionItems.findMany({
       where: {
         category: category.toUpperCase(),
@@ -106,7 +105,7 @@ export const getItem = async (req: any, res: any) => {
       },
     },
   });
-  console.log(item);
+
   return res.json({
     item,
   });

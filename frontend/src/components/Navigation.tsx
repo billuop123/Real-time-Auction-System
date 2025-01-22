@@ -58,7 +58,7 @@ const Navbar: React.FC = () => {
       try {
         const response = await fetchNotifications(userId);
         setNotification(response.data.notifications);
-        console.log(response.data.notifications);
+    
       } catch (error) {
         console.error("Error fetching notifications:", error);
       }
@@ -78,16 +78,16 @@ const Navbar: React.FC = () => {
 
     newSocket.onmessage = async (message) => {
       try {
-        console.log(JSON.parse(message.data).previousHighestBidder);
+   
         const previousHighestBidder = Number(
           JSON.parse(message.data).previousHighestBidder
         );
-        console.log(userId, previousHighestBidder);
+       
         if (Number(userId) === previousHighestBidder) {
           const response = await fetchNotifications(userId);
-          console.log(response.data);
+      
           setNotification(response.data.notifications);
-          console.log(response.data.notifications);
+       
         }
       } catch (error) {
         console.error("Error handling message:", error);
@@ -141,8 +141,7 @@ const Navbar: React.FC = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Implement search functionality
-    console.log("Searching for:", searchQuery);
+
   };
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);

@@ -54,7 +54,7 @@ export const SignupPage: React.FC = () => {
       }
       setIsSigningUp(false);
     } catch (error) {
-      console.log("Signup failed:", error);
+   
       toast.error(error.response.data.message);
       setIsSigningUp(false);
     }

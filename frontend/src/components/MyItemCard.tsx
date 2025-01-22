@@ -82,7 +82,7 @@ const MyItemCard: React.FC<MyItemCardProps> = ({
       <div className="relative">
         <img src={photo} alt={name} className="w-full h-48 object-cover" />
         <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-md">
-          ${startingPrice.toFixed(2)}
+          Rs.{startingPrice}
         </div>
       </div>
 
@@ -95,9 +95,6 @@ const MyItemCard: React.FC<MyItemCardProps> = ({
         <span className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700">
           {timeRemaining}
         </span>
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full text-sm transition duration-300">
-          Bid Now
-        </button>
       </div>
     </div>
   );

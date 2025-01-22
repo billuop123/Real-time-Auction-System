@@ -16,13 +16,11 @@ type NotificationType = {
 };
 
 export function Notification({ notifications }: any) {
-  console.log(notifications);
   const [isOpen, setIsOpen] = useState(false);
   const [safeNotifications, setSafeNotifications] = useState<
     NotificationType[]
   >([]);
 
-  console.log(safeNotifications);
   const userId = useInfo();
   useEffect(() => {
     if (Array.isArray(notifications) && notifications.length > 0) {

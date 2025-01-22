@@ -13,19 +13,18 @@ type AuctionItemFormState = {
   deadline: Date | null;
   startingPrice: number;
   selectedCategory: string;
-  // status?: string;
+
   userId?: string;
 };
 
 export const AuctionItem: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  // Assuming `useInfo` returns a user ID
   const token = sessionStorage.getItem("token");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const userId = useInfo();
   const handleFormSubmit = async (formData: AuctionItemFormState) => {
-    console.log("Form Data:", formData);
+
     if (userId === null) return;
 
     formData.userId = userId;
@@ -58,7 +57,7 @@ export const AuctionItem: React.FC = () => {
     if (!userId) return;
     async function isLoggedIn() {
       const jwt = sessionStorage.getItem("jwt");
-      console.log(jwt);
+
       if (!jwt) {
         navigate("/signin");
       }
@@ -66,10 +65,10 @@ export const AuctionItem: React.FC = () => {
       const status = await loggedIn(jwt);
 
       if (!status) {
-        console.log("This is being called");
+ 
         navigate("/signin");
       }
-      console.log("This is haha");
+   
       setIsLoggedIn(status);
     }
     isLoggedIn();

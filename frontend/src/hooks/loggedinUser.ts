@@ -13,7 +13,7 @@ export function useInfo() {
     const jwt = sessionStorage.getItem("jwt");
     if (jwt) {
       const decodedToken = jwtDecode<DecodedToken>(jwt);
-      console.log(decodedToken);
+
       const { userId } = decodedToken;
       setUserId(userId);
     }

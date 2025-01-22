@@ -4,20 +4,37 @@ import { useSearch } from "@/Contexts/SearchItemContext";
 import { getItems } from "@/helperFunctions/apiCalls";
 import { useEffect, useState } from "react";
 import { FaBoxOpen } from "react-icons/fa";
-
 export const Home = function () {
   const [isLoading, setIsLoading] = useState(false);
   const { items: allItems, setItems } = useSearch();
 
-  const sortedItems = allItems.sort((a, b) => {
-    const isAExpired = new Date(a.deadline) < new Date();
-    const isBExpired = new Date(b.deadline) < new Date();
+  const sortedItems = allItems
+    .filter((item) => new Date(item.deadline) > new Date()) // Active items only
+    .sort((a, b) => {
+      // Calculate time remaining for each item
+      const timeRemainingA =
+        new Date(a.deadline).getTime() - new Date().getTime();
+      const timeRemainingB =
+        new Date(b.deadline).getTime() - new Date().getTime();
 
-    if (isAExpired === isBExpired) return 0;
+      // Sort by least time remaining first
+      return timeRemainingA - timeRemainingB;
+    });
 
-    // Put non-expired (active) auctions first
-    return isAExpired ? 1 : -1;
-  });
+  // Append expired items at the end, sorted by how long they've been expired
+  const expiredItems = allItems
+    .filter((item) => new Date(item.deadline) <= new Date())
+    .sort((a, b) => {
+      const timeExpiredA =
+        new Date().getTime() - new Date(a.deadline).getTime();
+      const timeExpiredB =
+        new Date().getTime() - new Date(b.deadline).getTime();
+
+      return timeExpiredA - timeExpiredB;
+    });
+
+  // Combine active and expired items
+  const finalSortedItems = [...sortedItems, ...expiredItems];
 
   // Fetch items from the API
   useEffect(() => {
@@ -25,7 +42,7 @@ export const Home = function () {
       try {
         setIsLoading(true);
         const response = await getItems();
-        console.log(response.data.allItems);
+
         setItems(response.data.allItems);
       } catch (error) {
         console.error("Error fetching items:", error);
@@ -52,9 +69,9 @@ export const Home = function () {
           <div className="flex justify-center items-center h-96">
             <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600"></div>
           </div>
-        ) : sortedItems.length > 0 ? (
+        ) : finalSortedItems.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {sortedItems.map((item) => (
+            {finalSortedItems.map((item) => (
               <ItemCard
                 key={item.id}
                 deadline={item.deadline}

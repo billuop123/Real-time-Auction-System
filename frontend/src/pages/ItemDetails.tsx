@@ -57,7 +57,6 @@ export const ItemDetails = function () {
   const navigate = useNavigate();
   useEffect(() => {
     async function isLoggedIn() {
-      console.log("use effect called");
       const jwt = sessionStorage.getItem("jwt");
 
       if (!jwt) {
@@ -171,15 +170,12 @@ export const ItemDetails = function () {
     const numericBid = Number(value);
     if (highestPrice) {
       if (numericBid <= highestPrice) {
-        console.log("This is the shit1");
         setBidError(`Bid must be higher than Rs ${highestPrice.toFixed(2)}`);
       } else {
         setBidError("");
       }
     } else {
       if (numericBid <= item.startingPrice) {
-        console.log(numericBid, item.startingPrice);
-        console.log("This is the shit2");
         setBidError(
           `Bid must be higher than Rs ${item.startingPrice.toFixed(2)}`
         );
@@ -208,7 +204,7 @@ export const ItemDetails = function () {
       });
       if (response.ok) {
         const responseData = await response.json();
-        console.log(responseData.data);
+
         khaltiCall(responseData.data);
       }
     } catch (error) {
@@ -273,7 +269,6 @@ export const ItemDetails = function () {
               price: numericBid,
             })
           );
-          console.log("Bid submitted successfully");
         } catch (error) {
           console.error("Bid submission failed", error);
           setBidError("Failed to submit bid. Please try again.");

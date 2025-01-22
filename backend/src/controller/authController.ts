@@ -64,7 +64,7 @@ export const login = async (req: any, res: any) => {
     });
   }
   const result = await bcrypt.compare(password, emailUser.password);
-  console.log(result);
+
   if (!result) {
     return res.status(400).json({
       message: "Email and Password donot match",

@@ -134,9 +134,6 @@ const AuctionItemForm: React.FC<AuctionItemFormProps> = ({ onSubmit }) => {
       const now = new Date();
       value.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
       setFormData((prev) => ({ ...prev, deadline: value }));
-    } else {
-      // Handle the range case if needed
-      console.log("Date range selected:", value);
     }
   };
 

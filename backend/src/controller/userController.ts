@@ -16,14 +16,13 @@ export const getUserInfo = async (req: any, res: any) => {
   });
 };
 export const userProfile = async (req: any, res: any) => {
-  console.log(req.body);
   const { userId } = req.body;
   const user = await prisma.user.findFirst({
     where: {
       id: userId,
     },
   });
-  console.log(user);
+
   return res.json({
     user,
   });

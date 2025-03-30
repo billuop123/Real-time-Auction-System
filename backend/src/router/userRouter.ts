@@ -1,6 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+
 import express from "express";
-import { loggedIn, login, signup } from "../controller/authController";
+import { loggedIn, login, signup, userSigninGoogle } from "../controller/authController";
 import { cloudinarySetup } from "../controller/cloudinaryController";
 import {
   getUserInfo,
@@ -21,3 +21,4 @@ userRouter.post(
   updateProfilePicture
 );
 userRouter.post("/user-items", userItem);
+userRouter.post("/googlesignin",userSigninGoogle)

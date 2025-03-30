@@ -63,7 +63,7 @@ export const updateNotifications = async function (userId: string | null) {
     }
   );
 };
-export const addItems = async function (formDataToSend, token: string | null) {
+export const addItems = async function (formDataToSend:any, token: string | null) {
   const response = await axios.post(
     "http://localhost:3001/api/v1/item/additem",
     formDataToSend,
@@ -108,7 +108,7 @@ export const newNotification = async function (
     { userId: secondHighestBid, auctionId: Number(id) }
   );
 };
-export const signup = async function (formData) {
+export const signup = async function (formData:any) {
   const { data } = await axios.post(
     "http://localhost:3001/api/v1/user/signup",
     formData,
@@ -118,7 +118,7 @@ export const signup = async function (formData) {
   );
   return data;
 };
-export const signin = async function (formData) {
+export const signin = async function (formData:any) {
   const { data } = await axios.post("http://localhost:3001/api/v1/user/login", {
     email: formData.email,
     password: formData.password,

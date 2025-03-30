@@ -36,7 +36,6 @@ const allItems = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { search, category } = req.query;
     if (!search && !category) {
         const allItems = yield prismaClient_1.prisma.auctionItems.findMany({});
-        console.log(allItems);
         return res.json({
             allItems,
         });
@@ -71,7 +70,6 @@ const allItems = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
     }
     if (search && category) {
-        console.log(search, category.toUpperCase());
         const items = yield prismaClient_1.prisma.auctionItems.findMany({
             where: {
                 category: category.toUpperCase(),
@@ -110,7 +108,6 @@ const getItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             },
         },
     });
-    console.log(item);
     return res.json({
         item,
     });

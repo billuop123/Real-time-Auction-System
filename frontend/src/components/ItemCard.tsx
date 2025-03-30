@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { FaClock, FaTag, FaEye } from "react-icons/fa";
+import { FaClock, FaTag, FaEye, FaFire } from "react-icons/fa";
 
 interface ItemCardProps {
   deadline: string;
@@ -10,6 +10,7 @@ interface ItemCardProps {
   id: string;
   photo?: string;
   userId: string;
+  highlight?: boolean;
 }
 
 export const ItemCard: React.FC<ItemCardProps> = function ({
@@ -20,6 +21,7 @@ export const ItemCard: React.FC<ItemCardProps> = function ({
   id,
   photo,
   userId,
+  highlight = false,
 }) {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
@@ -55,8 +57,20 @@ export const ItemCard: React.FC<ItemCardProps> = function ({
     return () => clearInterval(interval);
   }, [deadline]);
 
+  // Calculate if time is running low (less than 3 hours)
+  const isTimeCritical = 
+    !isAuctionFinished && 
+    timeLeft.days === 0 && 
+    timeLeft.hours < 3;
+
   return (
-    <div className="max-w-sm bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
+    <div 
+      className={`max-w-sm bg-white rounded-xl overflow-hidden transform transition-all duration-300 hover:-translate-y-2 ${
+        highlight 
+          ? "ring-2 ring-orange-400 shadow-lg hover:shadow-2xl" 
+          : "shadow-md hover:shadow-xl"
+      }`}
+    >
       {/* Image Section */}
       {photo && (
         <div className="relative h-64 overflow-hidden">
@@ -65,11 +79,22 @@ export const ItemCard: React.FC<ItemCardProps> = function ({
             alt={name}
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hover:scale-110"
           />
-          {isAuctionFinished && (
-            <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-xs">
-              Closed
-            </div>
-          )}
+          
+          {/* Status indicators */}
+          <div className="absolute top-0 left-0 right-0 p-4 flex justify-between">
+            {highlight && !isAuctionFinished && (
+              <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center">
+                <FaFire className="mr-1" />
+                Ending Soon
+              </div>
+            )}
+            
+            {isAuctionFinished && (
+              <div className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-medium">
+                Closed
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -85,13 +110,22 @@ export const ItemCard: React.FC<ItemCardProps> = function ({
         <div className="flex justify-between items-center">
           {/* Time Left */}
           <div className="flex items-center space-x-2">
-            <FaClock className="text-indigo-600" />
+            {isTimeCritical ? (
+              <FaClock className="text-red-600 animate-pulse" />
+            ) : (
+              <FaClock className={highlight ? "text-orange-600" : "text-indigo-600"} />
+            )}
+            
             {isAuctionFinished ? (
               <span className="text-sm text-red-500 font-medium">
                 Auction Finished
               </span>
+            ) : isTimeCritical ? (
+              <span className="text-sm text-red-600 font-medium">
+                {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
+              </span>
             ) : (
-              <span className="text-sm text-gray-600">
+              <span className={`text-sm ${highlight ? "text-orange-600 font-medium" : "text-gray-600"}`}>
                 {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m
               </span>
             )}
@@ -101,7 +135,7 @@ export const ItemCard: React.FC<ItemCardProps> = function ({
           <div className="flex items-center space-x-2">
             <FaTag className="text-green-600" />
             <span className="text-sm font-medium text-gray-800">
-              Rs {startingPrice.toFixed(0)}
+              Rs {startingPrice.toLocaleString()}
             </span>
           </div>
         </div>
@@ -110,13 +144,17 @@ export const ItemCard: React.FC<ItemCardProps> = function ({
         <div className="flex justify-between items-center pt-4 border-t border-gray-200">
           <Link
             to={`/${id}`}
-            className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition"
+            className={`flex items-center space-x-2 px-4 py-2 text-white text-sm font-medium rounded-lg transition ${
+              highlight 
+                ? "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600" 
+                : "bg-indigo-600 hover:bg-indigo-700"
+            }`}
           >
             <FaEye />
             <span>View Details</span>
           </Link>
-          <p className="text-sm text-gray-500">
-            Seller ID: <span className="font-medium">{userId}</span>
+          <p className="text-xs text-gray-500 truncate max-w-[120px]">
+            {/* ID: <span className="font-medium">{userId.substring(0, 8)}...</span> */}
           </p>
         </div>
       </div>

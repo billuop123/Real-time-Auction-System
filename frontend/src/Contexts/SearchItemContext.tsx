@@ -15,6 +15,8 @@ interface Item {
   description: string;
   photo: string;
   userId: string;
+  isApproved:boolean
+  category:string
 }
 
 // Define the type for the context value

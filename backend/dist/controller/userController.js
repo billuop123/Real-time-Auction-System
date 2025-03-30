@@ -28,14 +28,12 @@ const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.getUserInfo = getUserInfo;
 const userProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(req.body);
     const { userId } = req.body;
     const user = yield prismaClient_1.prisma.user.findFirst({
         where: {
             id: userId,
         },
     });
-    console.log(user);
     return res.json({
         user,
     });

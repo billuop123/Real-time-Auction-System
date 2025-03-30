@@ -17,3 +17,4 @@ exports.userRouter.post("/getuserinfo", userController_1.getUserInfo);
 exports.userRouter.post("/userProfile", userController_1.userProfile);
 exports.userRouter.post("/updateProfilePicture", upload.single("profilePicture"), userController_1.updateProfilePicture);
 exports.userRouter.post("/user-items", userController_1.userItem);
+exports.userRouter.post("/googlesignin", authController_1.userSigninGoogle);

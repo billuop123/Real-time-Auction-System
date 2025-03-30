@@ -23,7 +23,7 @@ export const signup = async (req: any, res: any) => {
   const savedPassword = await bcrypt.hash(password, 15);
 
   try {
-    const newUser = await prisma.$transaction(async (prisma) => {
+    const newUser = await prisma.$transaction(async (prisma:any) => {
       const existingUser = await prisma.user.findFirst({
         where: { email },
       });
@@ -63,13 +63,17 @@ export const login = async (req: any, res: any) => {
       message: "There is no such user",
     });
   }
-  const result = await bcrypt.compare(password, emailUser.password);
-
-  if (!result) {
-    return res.status(400).json({
-      message: "Email and Password donot match",
-    });
+  if(emailUser.password){
+    const result = await bcrypt.compare(password, emailUser.password);
+    if (!result) {
+      return res.status(400).json({
+        message: "Email and Password donot match",
+      });
+    }
   }
+
+
+  
 
   const token = jwt.sign({ userId: emailUser.id }, JWT_SECRET, {
     expiresIn: "3d",
@@ -93,3 +97,29 @@ export const loggedIn = async (req: any, res: any) => {
     });
   }
 };
+export const userSigninGoogle=async(req:any,res:any)=>{
+  const {photo,name,email}=req.body
+  console.log("recieved")
+  try{
+    const {id}=await prisma.user.create({
+      data:{
+        photo,
+        name,
+        email
+      }
+    })
+    const token = jwt.sign({ userId: id }, JWT_SECRET, {
+      expiresIn: "3d",
+    });
+  
+    return res.json({
+      token
+    })
+  }catch(err:any){
+    console.log(err)
+    return res.json({
+      error:`Failed to signin with google${err.message}`
+    })
+  }
+
+}

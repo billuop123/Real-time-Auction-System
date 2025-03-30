@@ -15,24 +15,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.khaltiRouter = void 0;
 const axios_1 = __importDefault(require("axios"));
 const express_1 = __importDefault(require("express"));
-const react_router_dom_1 = require("react-router-dom");
 const prismaClient_1 = require("../prismaClient");
 exports.khaltiRouter = (0, express_1.default)();
 exports.khaltiRouter.post("/create", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { amount, products, auctionId } = JSON.parse(JSON.stringify(req.body));
-    yield prismaClient_1.prisma.auctionItems.update({
-        where: {
-            id: auctionId,
-        },
-        data: {
-            status: "SOLD",
-        },
-    });
     const formData = {
-        return_url: "http://localhost:5173",
+        return_url: `http://localhost:5173/${auctionId}`,
         website_url: "http://localhost:5173",
         amount: amount * 100,
-        purchase_order_id: 2,
+        purchase_order_id: auctionId,
         purchase_order_name: products[0].product,
     };
     callKhalti(formData, req, res);
@@ -42,24 +33,72 @@ const callKhalti = (formData, req, res) => __awaiter(void 0, void 0, void 0, fun
         Authorization: `Key ${process.env.KHALTI_SECRET_KEY}`,
         "Content-Type": "application/json",
     };
-    const response = yield axios_1.default.post("https://a.khalti.com/api/v2/epayment/initiate/", formData, {
-        headers,
-    });
-    res.json({
-        message: "khalti success",
-        payment_method: "khalti",
-        data: response.data,
-    });
+    try {
+        const response = yield axios_1.default.post("https://a.khalti.com/api/v2/epayment/initiate/", formData, { headers });
+        // ✅ Store `pidx` with `auctionId` in the database
+        yield prismaClient_1.prisma.payment.create({
+            data: {
+                //@ts-expect-error
+                pidx: response.data.pidx, // Save pidx from Khalti
+                auctionId: String(formData.purchase_order_id), // Save auction ID
+            },
+        });
+        res.json({
+            message: "Khalti success",
+            payment_method: "khalti",
+            data: response.data,
+        });
+    }
+    catch (error) {
+        console.error("Khalti Payment Error:", error);
+        res.status(500).json({ message: "Error processing payment", error });
+    }
 });
 exports.khaltiRouter.get("/callback", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { txnId, pidx, amount, purchase_order_id, transaction_id, message } = req.query;
+    const { pidx } = req.query;
     const headers = {
         Authorization: `Key ${process.env.KHALTI_SECRET_KEY}`,
         "Content-Type": "application/json",
     };
-    (0, react_router_dom_1.redirect)("/");
-    const response = yield axios_1.default.post("https://a.khalti.com/api/v2/epayment/lookup/", { pidx }, { headers });
-    res.json({
-        response: response.data,
-    });
+    try {
+        const response = yield axios_1.default.post("https://a.khalti.com/api/v2/epayment/lookup/", { pidx }, { headers });
+        ///@ts-expect-error
+        const paymentStatus = response.data.status;
+        console.log("---------------------");
+        console.log(paymentStatus);
+        if (paymentStatus === "Completed") {
+            // ✅ Fetch auctionId from the database using `pidx`
+            const paymentRecord = yield prismaClient_1.prisma.payment.findUnique({
+                where: { pidx },
+            });
+            if (!paymentRecord) {
+                return res.status(400).json({ message: "No matching payment found" });
+            }
+            // ✅ Update the auction item status
+            yield prismaClient_1.prisma.auctionItems.update({
+                where: {
+                    id: Number(paymentRecord.auctionId), // Use the auction ID from the database
+                },
+                data: {
+                    status: "SOLD",
+                },
+            });
+            return res.json({
+                message: "Payment successful",
+                payment_status: "Completed",
+                transaction_data: response.data,
+            });
+        }
+        else {
+            return res.json({
+                message: "Payment not completed",
+                payment_status: paymentStatus,
+                transaction_data: response.data,
+            });
+        }
+    }
+    catch (error) {
+        console.error("Khalti Lookup Error:", error);
+        return res.status(500).json({ message: "Error verifying payment", error });
+    }
 }));

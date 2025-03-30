@@ -51,7 +51,7 @@ notificationRouter.put("/clearnotifications", async (req: any, res: any) => {
         .json({ message: "No notifications found for the given user." });
     }
 
-    const updatePromises = notifications.map((notification) =>
+    const updatePromises = notifications.map((notification:any) =>
       prisma.notification.update({
         where: {
           id: notification.id,

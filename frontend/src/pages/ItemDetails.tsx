@@ -16,8 +16,14 @@ import {
   FaHandHoldingUsd,
   FaTag,
   FaUser,
+  FaTrophy,
+  FaHourglassEnd,
+  FaShoppingCart,
+  FaArrowLeft,
+  FaGavel,
+  FaMoneyBillWave,
 } from "react-icons/fa";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 interface User {
   name: string;
@@ -54,7 +60,27 @@ export const ItemDetails = function () {
   const [highestPrice, setHighestPrice] = useState(0);
   const [previousHighestBidder, setPreviousHighestBidder] = useState(0);
   const [isDisabled, setIsDisabled] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState("");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const pidx = searchParams.get("pidx");
+  useEffect(() => {
+    if (pidx) {
+      setIsDisabled(true);
+      axios
+        .get(`http://localhost:3001/api/v1/khalti/callback?pidx=${pidx}`)
+        .then((response) => {
+          console.log("Payment Verified:", response.data);
+        })
+        .catch((error) => {
+          console.error("Error verifying payment:", error);
+        })
+        .finally(() => {
+          setIsDisabled(false);
+        });
+    }
+  }, [pidx]);
+
   useEffect(() => {
     async function isLoggedIn() {
       const jwt = sessionStorage.getItem("jwt");
@@ -76,6 +102,7 @@ export const ItemDetails = function () {
     }
     isLoggedIn();
   }, [navigate]);
+
   useEffect(() => {
     if (item === null) return;
     const deadlineDate = new Date(item.deadline);
@@ -85,6 +112,7 @@ export const ItemDetails = function () {
       setIsDisabled(true);
     }
   }, [item]);
+
   useEffect(() => {
     async function getDetails() {
       try {
@@ -96,6 +124,7 @@ export const ItemDetails = function () {
         setHighestBidder(HighestBidder);
         setHighestPrice(Number(HighestPrice));
         setPreviousHighestBidder(Number(secondHighestBid));
+        setNoBids(HighestBidder==="no bids");
       } catch (error) {
         console.error("Failed to fetch item or highest bidder details", error);
       }
@@ -117,6 +146,7 @@ export const ItemDetails = function () {
           setHighestBidder(HighestBidder);
           setHighestPrice(Number(HighestPrice));
           setPreviousHighestBidder(Number(secondHighestBid));
+          setNoBids(HighestBidder==="no bids");
         }
       } catch (error) {
         console.error("Failed to handle WebSocket message", error);
@@ -128,27 +158,30 @@ export const ItemDetails = function () {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setItem((prevItem) => (prevItem ? { ...prevItem } : null));
+      if (item) {
+        setTimeRemaining(calculateTimeLeft());
+        
+        // Check if deadline has passed
+        const deadlineDate = new Date(item.deadline);
+        const now = new Date();
+        if (deadlineDate.getTime() <= now.getTime()) {
+          setIsDisabled(true);
+        }
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [item]);
 
-  if (!item) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-indigo-100 to-purple-100">
-        <div className="spinner"></div>
-      </div>
-    );
-  }
-
-  const timeLeft = () => {
+  const calculateTimeLeft = () => {
+    if (!item) return "";
+    
     const deadlineDate = new Date(item.deadline);
     const now = new Date();
     const diff = deadlineDate.getTime() - now.getTime();
 
     if (diff <= 0) {
-      return "time's up";
+      return "Auction ended";
     }
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -175,26 +208,28 @@ export const ItemDetails = function () {
         setBidError("");
       }
     } else {
-      if (numericBid <= item.startingPrice) {
+      if (numericBid <= item!.startingPrice) {
         setBidError(
-          `Bid must be higher than Rs ${item.startingPrice.toFixed(2)}`
+          `Bid must be higher than Rs ${item!.startingPrice.toFixed(2)}`
         );
       } else {
         setBidError("");
       }
     }
   };
+  
   const handleClick = async function () {
     const url = "http://localhost:3001/api/v1/khalti/create";
     const data = {
       amount: Number(highestPrice),
       auctionId: Number(id),
       products: [
-        { product: item.name, amount: Number(highestPrice), quantity: 1 },
+        { product: item!.name, amount: Number(highestPrice), quantity: 1 },
       ],
       payment_method: "khalti",
     };
     try {
+      toast.loading("Redirecting to payment gateway...");
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -204,22 +239,26 @@ export const ItemDetails = function () {
       });
       if (response.ok) {
         const responseData = await response.json();
-
         khaltiCall(responseData.data);
       }
     } catch (error) {
+      toast.error("Payment initialization failed. Please try again.");
       console.error("Error during fetch:", error);
     }
   };
+  
   const khaltiCall = (data: any) => {
     window.location.href = data.payment_url;
   };
+  
   const submitBid = async () => {
     const numericBid = Number(bidAmount);
     if (!userId) return;
+    
     if (highestPrice) {
       if (numericBid > highestPrice) {
         try {
+          toast.loading("Processing your bid...");
           await addBid(numericBid, userId, id);
           const { HighestBidder, HighestPrice, secondHighestBid } =
             await HighestBidderInfo(id);
@@ -230,6 +269,8 @@ export const ItemDetails = function () {
           setShowBidInput(false);
           setBidAmount("");
           setBidError("");
+          setNoBids(false);
+          
           if (secondHighestBid) {
             await newNotification(secondHighestBid, id);
           }
@@ -241,27 +282,34 @@ export const ItemDetails = function () {
               previousHighestBidder: Number(highestBidder!.id),
             })
           );
+          toast.dismiss();
           toast.success("Bid successfully placed!");
         } catch (error) {
+          toast.dismiss();
           console.error("Bid submission failed", error);
           setBidError("Failed to submit bid. Please try again.");
-          toast.error("Failed to placed Bid.");
+          toast.error("Failed to place bid.");
         }
       } else {
         setBidError(
-          `Bid must be higher than Rs ${
-            highestPrice ? highestPrice.toFixed(2) : item.startingPrice
-          }`
+          `Bid must be higher than Rs ${highestPrice.toFixed(2)}`
         );
       }
     } else {
-      if (numericBid > item.startingPrice) {
+      if (numericBid > item!.startingPrice) {
         try {
+          toast.loading("Processing your bid...");
           await addBid(numericBid, userId, id);
+          
+          const { HighestBidder, HighestPrice } = await HighestBidderInfo(id);
+          setHighestBidder(HighestBidder);
+          setHighestPrice(Number(HighestPrice));
+          setNoBids(false);
 
           setShowBidInput(false);
           setBidAmount("");
           setBidError("");
+          
           socket?.send(
             JSON.stringify({
               type: "new_bid",
@@ -269,35 +317,53 @@ export const ItemDetails = function () {
               price: numericBid,
             })
           );
+          
+          toast.dismiss();
+          toast.success("Bid successfully placed!");
         } catch (error) {
+          toast.dismiss();
           console.error("Bid submission failed", error);
           setBidError("Failed to submit bid. Please try again.");
+          toast.error("Failed to place bid.");
         }
       } else {
         setBidError(
-          `Bid must be higher than Rs ${
-            highestPrice ? highestPrice.toFixed(2) : item.startingPrice
-          }`
+          `Bid must be higher than Rs ${item!.startingPrice.toFixed(2)}`
         );
       }
     }
   };
 
+  const goBack = () => {
+    navigate(-1);
+  };
+
+  if (!item) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-indigo-100 to-purple-100">
+        <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent border-solid rounded-full animate-spin mb-4"></div>
+        <p className="text-indigo-800 font-medium">Loading auction details...</p>
+      </div>
+    );
+  }
+
+  const isWinner = Number(highestBidder?.id) === Number(userId) && isDisabled;
+  const isOwner = item.userId === Number(userId);
+  
   return (
     <>
-      {item.status === "SOLD" ? `item is sold to ${highestBidder?.name}` : ""}
       {showBidInput && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm"
+          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm"
           onClick={() => setShowBidInput(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl p-8 w-96 relative"
+            className="bg-white rounded-2xl shadow-2xl p-8 w-96 relative transform transition-all duration-300 ease-in-out"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setShowBidInput(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition-colors"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -321,7 +387,9 @@ export const ItemDetails = function () {
 
             <div className="space-y-4">
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500"></span>
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                  <FaMoneyBillWave className="text-indigo-500" />
+                </span>
 
                 <input
                   type="number"
@@ -329,26 +397,33 @@ export const ItemDetails = function () {
                   onChange={handleBidChange}
                   placeholder={`Enter bid (Min: Rs ${
                     highestPrice
-                      ? highestPrice.toFixed(2)
-                      : item.startingPrice.toFixed(2)
+                      ? (highestPrice + 1).toFixed(2)
+                      : (item.startingPrice + 1).toFixed(2)
                   })`}
-                  className={`w-full pl-6 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+                  className={`w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
                     bidError
                       ? "border-red-500 focus:ring-red-500"
                       : "border-gray-300 focus:ring-indigo-500"
                   }`}
-                  min={highestPrice ? highestPrice : item.startingPrice}
+                  min={highestPrice ? highestPrice + 1 : item.startingPrice + 1}
                   step="1"
                 />
               </div>
 
               {bidError && (
-                <div className="flex items-center space-x-2 text-red-500 text-sm">
+                <div className="flex items-center space-x-2 text-red-500 text-sm p-2 bg-red-50 rounded-lg">
                   <FaExclamationCircle />
-
                   <p>{bidError}</p>
                 </div>
               )}
+
+              <div className="bg-indigo-50 p-3 rounded-lg text-sm text-indigo-700 flex items-start space-x-2">
+                <FaGavel className="mt-1 flex-shrink-0" />
+                <p>
+                  Your bid must be at least Rs 1 more than the current highest bid.
+                  Once placed, bids cannot be retracted.
+                </p>
+              </div>
 
               <div className="flex space-x-4 mt-6">
                 <button
@@ -361,14 +436,15 @@ export const ItemDetails = function () {
                 <button
                   onClick={submitBid}
                   disabled={
-                    item.userId === Number(userId) ||
+                    isOwner ||
                     highestBidder?.id === Number(userId) ||
                     Number(bidAmount) <= highestPrice ||
                     Number(bidAmount) <= Number(item.startingPrice) ||
-                    isDisabled
+                    isDisabled ||
+                    !bidAmount
                   }
                   className={`flex-1 py-3 rounded-lg transition ${
-                    bidError || !bidAmount
+                    bidError || !bidAmount || isOwner || isDisabled || highestBidder?.id === Number(userId)
                       ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                       : "bg-indigo-600 text-white hover:bg-indigo-700"
                   }`}
@@ -380,172 +456,194 @@ export const ItemDetails = function () {
           </div>
         </div>
       )}
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden grid md:grid-cols-2 gap-0 border border-slate-100">
-          {/* Image Section */}
-
-          <div className="relative group">
-            <img
-              src={item.photo}
-              alt={item.name}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-
-            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
-          </div>
-
-          {/* Details Section */}
-
-          <div className="p-10 space-y-8 bg-white">
-            {/* Seller Profile */}
-
-            <div className="flex items-center space-x-6 pb-6 border-b border-slate-200">
-              <img
-                src={item.user.photo}
-                alt={item.user.name}
-                className="w-20 h-20 rounded-full object-cover ring-4 ring-indigo-100 shadow-lg"
-              />
-
-              <div>
-                <h3 className="text-xl font-semibold text-slate-800 flex items-center space-x-2">
-                  <FaUser className="text-indigo-600" />
-
-                  <span>{item.user.name}</span>
-                </h3>
-
-                <p className="text-slate-500 text-sm">Seller</p>
-              </div>
+      
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Back button */}
+          <button 
+            onClick={goBack}
+            className="mb-6 flex items-center space-x-2 text-indigo-700 hover:text-indigo-900 transition-colors"
+          >
+            <FaArrowLeft /> 
+            <span>Back to auctions</span>
+          </button>
+          
+          {/* Status banner for sold items */}
+          {item.status === "SOLD" && (
+            <div className="mb-6 bg-green-600 text-white p-4 rounded-xl shadow-md flex items-center justify-center space-x-3">
+              <FaTrophy className="text-yellow-300 text-xl" />
+              <span className="font-medium">This item has been sold to {highestBidder?.name}</span>
             </div>
-
-            {/* Item Details */}
-
-            <div>
-              <h1 className="text-4xl font-bold text-slate-900 mb-4 tracking-tight">
-                {item.name}
-              </h1>
-
-              <p className="text-slate-600 mb-6 leading-relaxed">
-                {item.description}
-              </p>
-
-              {/* Metrics Grid */}
-
-              <div className="grid grid-cols-2 gap-6">
-                <div className="bg-indigo-50 p-5 rounded-xl shadow-sm hover:shadow-md transition-all">
-                  <FaClock className="text-indigo-600 text-3xl mb-3" />
-
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">
-                    Time Left
-                  </p>
-
-                  <p className="text-lg font-bold text-indigo-800">
-                    {timeLeft()}
-                  </p>
-                </div>
-
-                <div className="bg-emerald-50 p-5 rounded-xl shadow-sm hover:shadow-md transition-all">
-                  <FaTag className="text-emerald-600 text-3xl mb-3" />
-
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">
-                    Starting Price
-                  </p>
-
-                  <p className="text-lg font-bold text-emerald-800">
-                    Rs {item.startingPrice.toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-
-            <div className="pt-6 space-y-4">
-              <div className="flex space-x-4">
-                <button
-                  className="flex-1 py-4 bg-indigo-600 text-white rounded-xl 
-
-                hover:bg-indigo-700 transition-colors flex items-center justify-center space-x-2 
-
-                disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={handlePlaceBid}
-                  disabled={
-                    item.userId === Number(userId) ||
-                    highestBidder?.id === Number(userId) ||
-                    isDisabled
-                  }
-                >
-                  <FaHandHoldingUsd />
-
-                  <span>Place Bid</span>
-                </button>
-                {Number(highestBidder?.id) === Number(userId) &&
-                isDisabled &&
-                !(item.status === "SOLD") ? (
-                  <button onClick={handleClick}>Buy item</button>
-                ) : (
-                  ""
-                )}
-
-                <button
-                  className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-xl 
-
-                hover:bg-slate-200 transition-colors flex items-center justify-center space-x-2"
-                  onClick={() => console.log("Contact Seller")}
-                >
-                  <FaEnvelope />
-
-                  <span>Contact Seller</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Highest Bidder Section */}
-
-        <div className="max-w-6xl mx-auto mt-8 bg-white rounded-3xl p-6 shadow-lg">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-4">
-            Highest Bidder
-          </h2>
-
-          {noBids ? (
-            <p className="text-slate-500 italic">No bids yet!</p>
-          ) : highestBidder?.name ? (
-            <div className="flex items-center space-x-6 bg-slate-50 p-4 rounded-xl">
-              <img
-                src={highestBidder.photo}
-                alt={highestBidder.name}
-                className="w-16 h-16 rounded-full object-cover ring-4 ring-green-100"
-              />
-
-              <div>
-                <p className="text-slate-800 text-lg font-medium">
-                  {highestBidder.name}
-                </p>
-
-                <p className="text-green-600 font-bold text-xl">
-                  Rs {highestPrice.toFixed(2)}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <p className="text-slate-500 italic">There are no bids</p>
           )}
-          <div className="text-sm text-red-500 font-semibold text-center">
-            {item.userId === Number(userId)
-              ? "Seller cannot buy his own item."
-              : ""}
-            {highestBidder?.id === Number(userId)
-              ? "You are already the highest bidder!"
-              : ""}
-          </div>
-          <div className="text-sm text-green-500 font-semibold text-center">
-            {highestBidder?.id === Number(userId) && isDisabled
-              ? "You have already won this bid"
-              : ""}
-            {highestBidder?.id !== Number(userId) && isDisabled
-              ? `${highestBidder?.name} have already won this bid`
-              : ""}
+          
+          {/* Main content card */}
+          <div className="bg-white shadow-2xl rounded-3xl overflow-hidden grid md:grid-cols-2 gap-0 border border-indigo-100">
+            {/* Image Section */}
+            <div className="relative group h-full">
+              <img
+                src={item.photo}
+                alt={item.name}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              
+              {/* Time left badge on image */}
+              <div className="absolute top-4 right-4">
+                <div className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  isDisabled 
+                    ? "bg-red-500 text-white" 
+                    : "bg-indigo-600 text-white"
+                } shadow-lg flex items-center space-x-2`}>
+                  {isDisabled ? <FaHourglassEnd /> : <FaClock />}
+                  <span>{timeRemaining}</span>
+                </div>
+              </div>
+              
+              {/* Winner badge */}
+              {isDisabled && highestBidder && (
+                <div className="absolute left-0 bottom-0 w-full bg-black/70 text-white p-4 flex items-center justify-center space-x-2">
+                  <FaTrophy className="text-yellow-400" />
+                  <span className="font-medium">
+                    {isWinner ? "You won this auction!" : `${highestBidder.name} won this auction`}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Details Section */}
+            <div className="p-10 space-y-8 bg-white flex flex-col justify-between">
+              {/* Item Info */}
+              <div>
+                {/* Seller Profile */}
+                <div className="flex items-center space-x-6 pb-6 border-b border-indigo-100">
+                  <img
+                    src={item.user.photo}
+                    alt={item.user.name}
+                    className="w-16 h-16 rounded-full object-cover ring-4 ring-indigo-100 shadow-lg"
+                  />
+                  <div>
+                    <h3 className="text-xl font-semibold text-slate-800 flex items-center space-x-2">
+                      <FaUser className="text-indigo-600" />
+                      <span>{item.user.name}</span>
+                    </h3>
+                    <p className="text-slate-500 text-sm">Seller</p>
+                  </div>
+                </div>
+
+                {/* Item Details */}
+                <div className="pt-6">
+                  <h1 className="text-3xl font-bold text-slate-900 mb-4 tracking-tight">
+                    {item.name}
+                  </h1>
+                  <p className="text-slate-600 mb-6 leading-relaxed">
+                    {item.description}
+                  </p>
+
+                  {/* Metrics Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-indigo-50 p-4 rounded-xl shadow-sm hover:shadow-md transition-all">
+                      <FaClock className="text-indigo-600 text-2xl mb-2" />
+                      <p className="text-xs text-slate-500 uppercase tracking-wider">
+                        Auction Ends
+                      </p>
+                      <p className="text-lg font-bold text-indigo-800">
+                        {new Date(item.deadline).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="bg-emerald-50 p-4 rounded-xl shadow-sm hover:shadow-md transition-all">
+                      <FaTag className="text-emerald-600 text-2xl mb-2" />
+                      <p className="text-xs text-slate-500 uppercase tracking-wider">
+                        Starting Price
+                      </p>
+                      <p className="text-lg font-bold text-emerald-800">
+                        Rs {item.startingPrice.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Current highest bid card */}
+              <div className="bg-slate-50 rounded-xl p-4 shadow-sm border border-slate-100">
+                <h3 className="text-slate-700 font-medium mb-2">Current Highest Bid</h3>
+                {noBids ? (
+                  <p className="text-slate-500 italic">No bids yet!</p>
+                ) : highestBidder ? (
+                  <div className="flex items-center space-x-4">
+                    <img
+                      src={highestBidder.photo}
+                      alt={highestBidder.name}
+                      className="w-12 h-12 rounded-full object-cover ring-2 ring-green-100"
+                    />
+                    <div>
+                      <p className="text-slate-800 font-medium">
+                        {highestBidder.name}
+                      </p>
+                      <p className="text-green-600 font-bold text-xl">
+                        Rs {highestPrice.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-slate-500 italic">No bids yet</p>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-4 space-y-4">
+                {/* Status messages */}
+                <div className="text-center">
+                  {isOwner && (
+                    <div className="text-amber-600 bg-amber-50 p-2 rounded-lg font-medium mb-2">
+                      You are the seller of this item
+                    </div>
+                  )}
+                  {highestBidder?.id === Number(userId) && !isDisabled && (
+                    <div className="text-green-600 bg-green-50 p-2 rounded-lg font-medium mb-2">
+                      You are currently the highest bidder!
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex space-x-4">
+                  {/* Place Bid button */}
+                  <button
+                    className={`flex-1 py-4 rounded-xl flex items-center justify-center space-x-2 transition-colors shadow-sm 
+                    ${isOwner || highestBidder?.id === Number(userId) || isDisabled
+                      ? "bg-slate-200 text-slate-500 cursor-not-allowed"
+                      : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200"
+                    }`}
+                    onClick={handlePlaceBid}
+                    disabled={isOwner || highestBidder?.id === Number(userId) || isDisabled}
+                  >
+                    <FaHandHoldingUsd />
+                    <span>Place Bid</span>
+                  </button>
+                  
+                  {/* Buy Item button (for winners) */}
+                  {isWinner && item.status !== "SOLD" && (
+                    <button
+                      onClick={handleClick}
+                      className="flex-1 py-4 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center space-x-2 shadow-sm shadow-green-200"
+                    >
+                      <FaShoppingCart />
+                      <span>Complete Purchase</span>
+                    </button>
+                  )}
+                  
+                  {/* Contact Seller button */}
+                  {(!isWinner || item.status === "SOLD") && (
+                    <button
+                      className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors flex items-center justify-center space-x-2 shadow-sm"
+                      onClick={() => console.log("Contact Seller")}
+                    >
+                      <FaEnvelope />
+                      <span>Contact Seller</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

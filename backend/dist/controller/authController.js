@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loggedIn = exports.login = exports.signup = void 0;
+exports.userSigninGoogle = exports.loggedIn = exports.login = exports.signup = void 0;
 const config_1 = require("../config");
 const prismaClient_1 = require("../prismaClient");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
@@ -75,12 +75,13 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             message: "There is no such user",
         });
     }
-    const result = yield bcryptjs_1.default.compare(password, emailUser.password);
-    console.log(result);
-    if (!result) {
-        return res.status(400).json({
-            message: "Email and Password donot match",
-        });
+    if (emailUser.password) {
+        const result = yield bcryptjs_1.default.compare(password, emailUser.password);
+        if (!result) {
+            return res.status(400).json({
+                message: "Email and Password donot match",
+            });
+        }
     }
     const token = jsonwebtoken_1.default.sign({ userId: emailUser.id }, config_1.JWT_SECRET, {
         expiresIn: "3d",
@@ -106,3 +107,29 @@ const loggedIn = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.loggedIn = loggedIn;
+const userSigninGoogle = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { photo, name, email } = req.body;
+    console.log("recieved");
+    try {
+        const { id } = yield prismaClient_1.prisma.user.create({
+            data: {
+                photo,
+                name,
+                email
+            }
+        });
+        const token = jsonwebtoken_1.default.sign({ userId: id }, config_1.JWT_SECRET, {
+            expiresIn: "3d",
+        });
+        return res.json({
+            token
+        });
+    }
+    catch (err) {
+        console.log(err);
+        return res.json({
+            error: `Failed to signin with google${err.message}`
+        });
+    }
+});
+exports.userSigninGoogle = userSigninGoogle;

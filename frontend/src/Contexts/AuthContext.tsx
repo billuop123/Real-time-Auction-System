@@ -6,6 +6,8 @@ interface AuthContextType {
   setEmail: React.Dispatch<React.SetStateAction<string>>;
   password: string;
   setPassword: React.Dispatch<React.SetStateAction<string>>;
+  isVerified: boolean | null;
+  setIsVerified: React.Dispatch<React.SetStateAction<boolean | null>>;
 }
 
 // Create the context with the appropriate type or null
@@ -14,9 +16,9 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-
+  const [isVerified, setIsVerified] = useState<boolean | null>(null);
   return (
-    <AuthContext.Provider value={{ email, setEmail, password, setPassword }}>
+    <AuthContext.Provider value={{ email, setEmail, password, setPassword, isVerified, setIsVerified }}>
       {children}
     </AuthContext.Provider>
   );

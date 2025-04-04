@@ -4,6 +4,7 @@ import {
   userProfile,
 } from "@/helperFunctions/apiCalls";
 import { useInfo } from "@/hooks/loggedinUser";
+import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { FaCamera, FaEnvelope, FaUser } from "react-icons/fa";
@@ -52,6 +53,16 @@ export const Userprofile = () => {
 
     fetchDetails();
   }, [userId]);
+  useEffect(()=>{
+    if(!userId) return;
+  const isVerified=async()=>{
+    const response=await axios.post("http://localhost:3001/api/v1/user/isVerified",{userId})
+    if(!response.data.isVerified){
+      navigate("/resendverificationemail")
+    }
+  }
+  isVerified()
+  },[userId])
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files![0];

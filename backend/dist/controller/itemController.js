@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteItem = exports.getItem = exports.allItems = exports.addItem = void 0;
+exports.getFeaturedItems = exports.deleteItem = exports.getItem = exports.allItems = exports.addItem = void 0;
 const prismaClient_1 = require("../prismaClient");
 const addItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, description, photo, deadline, startingPrice, userId, category, } = req.body;
@@ -125,3 +125,19 @@ const deleteItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     });
 });
 exports.deleteItem = deleteItem;
+const getFeaturedItems = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const featuredItems = yield prismaClient_1.prisma.auctionItems.findMany({
+            where: {
+                featured: true,
+            },
+        });
+        return res.json({
+            featuredItems,
+        });
+    }
+    catch (err) {
+        return res.status(500).json({ error: "failed to get featured items" });
+    }
+});
+exports.getFeaturedItems = getFeaturedItems;

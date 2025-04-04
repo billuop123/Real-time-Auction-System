@@ -22,6 +22,7 @@ import {
   FaArrowLeft,
   FaGavel,
   FaMoneyBillWave,
+  FaTimes,
 } from "react-icons/fa";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
@@ -64,6 +65,11 @@ export const ItemDetails = function () {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const pidx = searchParams.get("pidx");
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactMessage, setContactMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [contactError, setContactError] = useState("");
+
   useEffect(() => {
     if (pidx) {
       setIsDisabled(true);
@@ -80,7 +86,16 @@ export const ItemDetails = function () {
         });
     }
   }, [pidx]);
-
+useEffect(()=>{
+  if(!userId) return;
+const isVerified=async()=>{
+  const response=await axios.post("http://localhost:3001/api/v1/user/isVerified",{userId})
+  if(!response.data.isVerified){
+    navigate("/resendverificationemail")
+  }
+}
+isVerified()
+},[userId])
   useEffect(() => {
     async function isLoggedIn() {
       const jwt = sessionStorage.getItem("jwt");
@@ -338,6 +353,33 @@ export const ItemDetails = function () {
     navigate(-1);
   };
 
+  const handleContactSeller = async () => {
+    if (!contactMessage.trim()) {
+      setContactError("Please enter a message");
+      return;
+    }
+
+    setIsSending(true);
+    setContactError("");
+
+    try {
+      const response = await axios.post("http://localhost:3001/api/v1/item/contact-seller", {
+        itemId: id,
+        buyerId: userId,
+        message: contactMessage
+      });
+
+      toast.success("Message sent successfully!");
+      setShowContactModal(false);
+      setContactMessage("");
+    } catch (error: any) {
+      console.error("Error contacting seller:", error);
+      setContactError(error.response?.data?.error || "Failed to send message");
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   if (!item) {
     return (
       <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-indigo-100 to-purple-100">
@@ -363,7 +405,7 @@ export const ItemDetails = function () {
           >
             <button
               onClick={() => setShowBidInput(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition-colors"
+              className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 transition-colors"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -381,14 +423,14 @@ export const ItemDetails = function () {
               </svg>
             </button>
 
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+            <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center">
               Place Your Bid
             </h2>
 
             <div className="space-y-4">
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                  <FaMoneyBillWave className="text-indigo-500" />
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
+                  <FaMoneyBillWave className="text-amber-500" />
                 </span>
 
                 <input
@@ -403,7 +445,7 @@ export const ItemDetails = function () {
                   className={`w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
                     bidError
                       ? "border-red-500 focus:ring-red-500"
-                      : "border-gray-300 focus:ring-indigo-500"
+                      : "border-slate-200 focus:ring-amber-500"
                   }`}
                   min={highestPrice ? highestPrice + 1 : item.startingPrice + 1}
                   step="1"
@@ -417,7 +459,7 @@ export const ItemDetails = function () {
                 </div>
               )}
 
-              <div className="bg-indigo-50 p-3 rounded-lg text-sm text-indigo-700 flex items-start space-x-2">
+              <div className="bg-amber-50 p-3 rounded-lg text-sm text-amber-700 flex items-start space-x-2">
                 <FaGavel className="mt-1 flex-shrink-0" />
                 <p>
                   Your bid must be at least Rs 1 more than the current highest bid.
@@ -428,7 +470,7 @@ export const ItemDetails = function () {
               <div className="flex space-x-4 mt-6">
                 <button
                   onClick={() => setShowBidInput(false)}
-                  className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition"
+                  className="flex-1 py-3 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition"
                 >
                   Cancel
                 </button>
@@ -445,8 +487,8 @@ export const ItemDetails = function () {
                   }
                   className={`flex-1 py-3 rounded-lg transition ${
                     bidError || !bidAmount || isOwner || isDisabled || highestBidder?.id === Number(userId)
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-indigo-600 text-white hover:bg-indigo-700"
+                      ? "bg-slate-200 text-slate-500 cursor-not-allowed"
+                      : "bg-amber-500 text-white hover:bg-amber-600"
                   }`}
                 >
                   Place Bid
@@ -457,12 +499,12 @@ export const ItemDetails = function () {
         </div>
       )}
       
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           {/* Back button */}
           <button 
             onClick={goBack}
-            className="mb-6 flex items-center space-x-2 text-indigo-700 hover:text-indigo-900 transition-colors"
+            className="mb-6 flex items-center space-x-2 text-slate-700 hover:text-slate-900 transition-colors"
           >
             <FaArrowLeft /> 
             <span>Back to auctions</span>
@@ -477,7 +519,7 @@ export const ItemDetails = function () {
           )}
           
           {/* Main content card */}
-          <div className="bg-white shadow-2xl rounded-3xl overflow-hidden grid md:grid-cols-2 gap-0 border border-indigo-100">
+          <div className="bg-white shadow-2xl rounded-3xl overflow-hidden grid md:grid-cols-2 gap-0 border border-slate-100">
             {/* Image Section */}
             <div className="relative group h-full">
               <img
@@ -492,7 +534,7 @@ export const ItemDetails = function () {
                 <div className={`px-4 py-2 rounded-full text-sm font-medium ${
                   isDisabled 
                     ? "bg-red-500 text-white" 
-                    : "bg-indigo-600 text-white"
+                    : "bg-amber-500 text-white"
                 } shadow-lg flex items-center space-x-2`}>
                   {isDisabled ? <FaHourglassEnd /> : <FaClock />}
                   <span>{timeRemaining}</span>
@@ -515,15 +557,15 @@ export const ItemDetails = function () {
               {/* Item Info */}
               <div>
                 {/* Seller Profile */}
-                <div className="flex items-center space-x-6 pb-6 border-b border-indigo-100">
+                <div className="flex items-center space-x-6 pb-6 border-b border-slate-100">
                   <img
                     src={item.user.photo}
                     alt={item.user.name}
-                    className="w-16 h-16 rounded-full object-cover ring-4 ring-indigo-100 shadow-lg"
+                    className="w-16 h-16 rounded-full object-cover ring-4 ring-amber-100 shadow-lg"
                   />
                   <div>
                     <h3 className="text-xl font-semibold text-slate-800 flex items-center space-x-2">
-                      <FaUser className="text-indigo-600" />
+                      <FaUser className="text-amber-500" />
                       <span>{item.user.name}</span>
                     </h3>
                     <p className="text-slate-500 text-sm">Seller</p>
@@ -541,12 +583,12 @@ export const ItemDetails = function () {
 
                   {/* Metrics Grid */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-indigo-50 p-4 rounded-xl shadow-sm hover:shadow-md transition-all">
-                      <FaClock className="text-indigo-600 text-2xl mb-2" />
+                    <div className="bg-amber-50 p-4 rounded-xl shadow-sm hover:shadow-md transition-all">
+                      <FaClock className="text-amber-600 text-2xl mb-2" />
                       <p className="text-xs text-slate-500 uppercase tracking-wider">
                         Auction Ends
                       </p>
-                      <p className="text-lg font-bold text-indigo-800">
+                      <p className="text-lg font-bold text-amber-800">
                         {new Date(item.deadline).toLocaleString()}
                       </p>
                     </div>
@@ -611,7 +653,7 @@ export const ItemDetails = function () {
                     className={`flex-1 py-4 rounded-xl flex items-center justify-center space-x-2 transition-colors shadow-sm 
                     ${isOwner || highestBidder?.id === Number(userId) || isDisabled
                       ? "bg-slate-200 text-slate-500 cursor-not-allowed"
-                      : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200"
+                      : "bg-amber-500 text-white hover:bg-amber-600 shadow-amber-200"
                     }`}
                     onClick={handlePlaceBid}
                     disabled={isOwner || highestBidder?.id === Number(userId) || isDisabled}
@@ -635,7 +677,7 @@ export const ItemDetails = function () {
                   {(!isWinner || item.status === "SOLD") && (
                     <button
                       className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors flex items-center justify-center space-x-2 shadow-sm"
-                      onClick={() => console.log("Contact Seller")}
+                      onClick={() => setShowContactModal(true)}
                     >
                       <FaEnvelope />
                       <span>Contact Seller</span>
@@ -647,6 +689,66 @@ export const ItemDetails = function () {
           </div>
         </div>
       </div>
+
+      {/* Contact Seller Modal */}
+      {showContactModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-96 relative transform transition-all duration-300 ease-in-out">
+            <button
+              onClick={() => setShowContactModal(false)}
+              className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 transition-colors"
+            >
+              <FaTimes className="h-6 w-6" />
+            </button>
+
+            <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center">
+              Contact Seller
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Your Message
+                </label>
+                <textarea
+                  value={contactMessage}
+                  onChange={(e) => setContactMessage(e.target.value)}
+                  placeholder="Enter your message to the seller..."
+                  className="w-full h-32 p-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                />
+              </div>
+
+              {contactError && (
+                <div className="flex items-center space-x-2 text-red-500 text-sm p-2 bg-red-50 rounded-lg">
+                  <FaExclamationCircle />
+                  <p>{contactError}</p>
+                </div>
+              )}
+
+              <div className="flex space-x-4 mt-6">
+                <button
+                  onClick={() => setShowContactModal(false)}
+                  className="flex-1 py-3 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={handleContactSeller}
+                  disabled={isSending}
+                  className={`flex-1 py-3 rounded-lg transition ${
+                    isSending
+                      ? "bg-slate-200 text-slate-500 cursor-not-allowed"
+                      : "bg-amber-500 text-white hover:bg-amber-600"
+                  }`}
+                >
+                  {isSending ? "Sending..." : "Send Message"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

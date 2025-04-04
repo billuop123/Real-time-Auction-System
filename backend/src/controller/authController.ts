@@ -3,6 +3,7 @@ import { prisma } from "../prismaClient";
 import bcrypt from "bcryptjs";
 import z from "zod";
 import jwt from "jsonwebtoken";
+import { sendEmail } from "../mailer";
 const userSchema = z.object({
   name: z.string(),
   password: z.string().min(6),
@@ -30,7 +31,8 @@ export const signup = async (req: any, res: any) => {
       if (existingUser) {
         throw new Error("User already exists");
       }
-      return await prisma.user.create({
+    
+      const signedupUser= await prisma.user.create({
         data: {
           name,
           email,
@@ -38,8 +40,10 @@ export const signup = async (req: any, res: any) => {
           photo: uploadedFile?.path,
         },
       });
+    
+      return signedupUser;
     });
-
+    await sendEmail({email,emailType:"VERIFY",userId:newUser.id})
     res.status(201).json({
       status: "success",
       newUser,
@@ -48,7 +52,7 @@ export const signup = async (req: any, res: any) => {
     if (error.message === "User already exists") {
       return res.status(400).json({ message: error.message });
     }
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({ message: `Internal Server Error${error.message}` });
   }
 };
 export const login = async (req: any, res: any) => {
@@ -122,4 +126,79 @@ export const userSigninGoogle=async(req:any,res:any)=>{
     })
   }
 
+}
+export const verifyEmail=async(req:any,res:any)=>{
+  const {token}=req.body
+  try{
+    const user=await prisma.user.findFirst({
+      where:{
+        verifiedToken:token
+      }
+    })
+    if(!user){
+     return res.status(400).json({
+      error:"Invalid token"
+     })
+    }
+    if(Number(user.verifiedTokenExpiry) < Number(Date.now())){
+      return res.status(400).json({
+        error:"Token expired"
+      })
+    }
+    await prisma.user.update({
+      where:{id:user.id},
+      data:{
+        verifiedToken:null,
+        verifiedTokenExpiry:null,
+        isVerified:true
+      }
+    })
+    return res.json({
+      message:"Email verified successfully"
+    })
+  }catch(err:any){
+   
+    return res.status(500).json({
+      error:`Failed to verify email${err.message}`
+    })
+  }
+}
+export const resendVerificationEmail=async(req:any,res:any)=>{
+  const {userId}=req.body
+  try{
+    const user=await prisma.user.findFirst({
+      where:{
+        id:Number(userId)
+      }
+    })
+    if(!user){
+      return res.status(400).json({
+        error:"User not found"
+      })
+    }
+    await sendEmail({email:user.email,emailType:"VERIFY",userId:user.id.toString()})
+    return res.json({
+      message:"Verification email sent successfully"
+    })
+  }
+  catch(err:any){
+    return res.status(500).json({
+      error:`Failed to resend verification email${err.message}`
+    })
+  }
+}
+export const isVerified=async(req:any,res:any)=>{
+  const {userId}=req.body
+  try{
+    const user=await prisma.user.findFirst({
+      where:{id:Number(userId)}
+    })
+    return res.json({
+      isVerified:user?.isVerified
+    })
+  }catch(err:any){
+    return res.status(500).json({
+      error:`Failed to check if user is verified${err.message}`
+    })
+  }
 }

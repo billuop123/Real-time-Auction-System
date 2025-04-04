@@ -16,8 +16,11 @@ model User {
   id           Int           @id @default(autoincrement())
   email        String        @unique
   name         String
-  photo        String        @default("hhttps://s3.amazonaws.com/37assets/svn/765-default-avatar.png")
+  photo        String        @default("https://s3.amazonaws.com/37assets/svn/765-default-avatar.png")
   password     String?
+  verifiedToken String?
+  verifiedTokenExpiry DateTime?
+  isVerified Boolean @default(false)
   auctionItems AuctionItems[]
   bids Bids[]
   notifications Notification[]
@@ -32,9 +35,10 @@ model AuctionItems {
   photo        String
   userId       Int
  status Status @default(PENDING)
-  isApproved Boolean @default(false)
+  approvalStatus ApprovalStatus @default(PENDING)
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   category   Category
+  featured Boolean @default(false)
   notification Notification[]
 }
 enum Category {
@@ -53,7 +57,11 @@ enum Status{
   SOLD
   UNSOLD
 }
- 
+ enum ApprovalStatus{
+  APPROVED
+  DISAPPROVED
+  PENDING
+ }
  model Bids{
    id         Int            @id @default(autoincrement())
    price Int

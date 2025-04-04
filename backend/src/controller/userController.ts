@@ -8,6 +8,7 @@ export const getUserInfo = async (req: any, res: any) => {
     select: {
       name: true,
       photo: true,
+      isVerified: true,
     },
   });
 

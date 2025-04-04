@@ -1,3 +1,5 @@
+import { useInfo } from "@/hooks/loggedinUser";
+import axios from "axios";
 import React, { useEffect, useState } from "react";
 import "react-calendar/dist/Calendar.css";
 import DatePicker from "react-date-picker";
@@ -12,6 +14,7 @@ import {
   FaImage,
   FaTag,
 } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 interface AuctionItemFormProps {
   onSubmit: (formData: AuctionItemFormState) => void;
@@ -55,13 +58,13 @@ const AuctionItemForm: React.FC<AuctionItemFormProps> = ({ onSubmit }) => {
       selectedCategory: selectedValue,
     }));
   };
-
+  const userId = useInfo();
   const [preview, setPreview] = useState<string | null>(null);
   const [isSubmitDisabled, setIsSubmitDisabled] = useState(true);
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string;
   }>({});
-
+const navigate=useNavigate()
   useEffect(() => {
     const errors: { [key: string]: string } = {};
     const now = new Date();
@@ -109,6 +112,16 @@ const AuctionItemForm: React.FC<AuctionItemFormProps> = ({ onSubmit }) => {
       setPreview(null);
     }
   }, [formData.photo]);
+  useEffect(()=>{
+    if(!userId) return;
+  const isVerified=async()=>{
+    const response=await axios.post("http://localhost:3001/api/v1/user/isVerified",{userId})
+    if(!response.data.isVerified){
+      navigate("/resendverificationemail")
+    }
+  }
+  isVerified()
+  },[userId])
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -143,21 +156,21 @@ const AuctionItemForm: React.FC<AuctionItemFormProps> = ({ onSubmit }) => {
       onSubmit(formData);
     }
   };
-
+ 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md bg-white shadow-2xl rounded-2xl p-8 space-y-6"
+        className="w-full max-w-2xl bg-white shadow-xl rounded-2xl p-8 space-y-6"
       >
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+        <h2 className="text-3xl font-bold text-center text-slate-800 mb-8">
           Create Auction Item
         </h2>
 
         {/* Photo Upload with Preview */}
-        <div className="mb-4">
+        <div className="mb-6">
           <div className="flex items-center justify-center w-full">
-            <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 transition">
+            <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition">
               <input
                 type="file"
                 className="hidden"
@@ -168,12 +181,12 @@ const AuctionItemForm: React.FC<AuctionItemFormProps> = ({ onSubmit }) => {
                 <img
                   src={preview}
                   alt="Preview"
-                  className="w-full h-full object-cover rounded-lg"
+                  className="w-full h-full object-cover rounded-xl"
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <FaImage className="text-4xl text-gray-400 mb-3" />
-                  <p className="mb-2 text-sm text-gray-500">
+                  <FaImage className="text-4xl text-slate-400 mb-3" />
+                  <p className="mb-2 text-sm text-slate-500">
                     Click to upload image
                   </p>
                 </div>
@@ -186,11 +199,13 @@ const AuctionItemForm: React.FC<AuctionItemFormProps> = ({ onSubmit }) => {
             </p>
           )}
         </div>
+
+        {/* Category Select */}
         <div>
-          <div className="w-full max-w-xs mx-auto">
+          <div className="w-full">
             <label
               htmlFor="category-select"
-              className="block text-gray-700 text-sm font-bold mb-2"
+              className="block text-slate-700 text-sm font-medium mb-2"
             >
               Select Category
             </label>
@@ -198,10 +213,8 @@ const AuctionItemForm: React.FC<AuctionItemFormProps> = ({ onSubmit }) => {
               id="category-select"
               value={formData.selectedCategory}
               onChange={handleCategoryChange}
-              className="block w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg 
-        focus:ring-blue-500 focus:border-blue-500 p-2.5 
-        dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 
-        dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              className="block w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-lg 
+              focus:ring-amber-500 focus:border-amber-500 p-2.5"
             >
               <option value="" disabled>
                 Choose a category
@@ -210,26 +223,22 @@ const AuctionItemForm: React.FC<AuctionItemFormProps> = ({ onSubmit }) => {
                 <option
                   key={category}
                   value={category}
-                  className="bg-white text-gray-900 dark:bg-gray-700 dark:text-white"
+                  className="bg-white text-slate-900"
                 >
                   {category}
                 </option>
               ))}
             </select>
-            {formData.selectedCategory && (
-              <p className="mt-2 text-sm text-gray-600">
-                Selected Category: {formData.selectedCategory}
-              </p>
-            )}
           </div>
         </div>
+
         {/* Input Fields */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           {/* Name Input */}
           <div>
             <div className="flex items-center space-x-2 mb-2">
-              <FaTag className="text-indigo-600" />
-              <label className="text-sm font-medium text-gray-700">
+              <FaTag className="text-amber-500" />
+              <label className="text-sm font-medium text-slate-700">
                 Item Name
               </label>
             </div>
@@ -241,7 +250,7 @@ const AuctionItemForm: React.FC<AuctionItemFormProps> = ({ onSubmit }) => {
               className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 ${
                 validationErrors.name
                   ? "border-red-500 focus:ring-red-500"
-                  : "border-gray-300 focus:ring-indigo-500"
+                  : "border-slate-200 focus:ring-amber-500"
               }`}
               placeholder="Enter item name"
             />
@@ -255,8 +264,8 @@ const AuctionItemForm: React.FC<AuctionItemFormProps> = ({ onSubmit }) => {
           {/* Description */}
           <div>
             <div className="flex items-center space-x-2 mb-2">
-              <FaAlignLeft className="text-indigo-600" />
-              <label className="text-sm font-medium text-gray-700">
+              <FaAlignLeft className="text-amber-500" />
+              <label className="text-sm font-medium text-slate-700">
                 Description
               </label>
             </div>
@@ -265,7 +274,7 @@ const AuctionItemForm: React.FC<AuctionItemFormProps> = ({ onSubmit }) => {
               value={formData.description}
               onChange={handleChange}
               rows={4}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full p-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               placeholder="Describe your item"
             />
           </div>
@@ -273,8 +282,8 @@ const AuctionItemForm: React.FC<AuctionItemFormProps> = ({ onSubmit }) => {
           {/* Deadline */}
           <div>
             <div className="flex items-center space-x-2 mb-2">
-              <FaCalendarAlt className="text-indigo-600" />
-              <label className="text-sm font-medium text-gray-700">
+              <FaCalendarAlt className="text-amber-500" />
+              <label className="text-sm font-medium text-slate-700">
                 Auction Deadline
               </label>
             </div>
@@ -284,27 +293,25 @@ const AuctionItemForm: React.FC<AuctionItemFormProps> = ({ onSubmit }) => {
                   className={`text-lg ${
                     validationErrors.deadline
                       ? "text-red-500"
-                      : "text-indigo-500"
+                      : "text-amber-500"
                   }`}
                 />
               </div>
               <DatePicker
                 value={formData.deadline}
                 onChange={handleDateChange}
-                minDate={new Date()} // Prevent selecting past dates
-                clearIcon={null} // Remove default clear icon
-                calendarIcon={null} // Remove default calendar icon
-                format="y-MM-dd" // Specify date format
-                className={`w-full p-3 pl-10 border rounded-lg focus:outline-none focus:ring-2 text-gray-700 ${
+                minDate={new Date()}
+                clearIcon={null}
+                calendarIcon={null}
+                format="y-MM-dd"
+                className={`w-full p-3 pl-10 border rounded-lg focus:outline-none focus:ring-2 text-slate-700 ${
                   validationErrors.deadline
                     ? "border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-indigo-500"
+                    : "border-slate-200 focus:ring-amber-500"
                 }`}
-                // calendarClassName="custom-calendar"
                 dayPlaceholder="dd"
                 monthPlaceholder="mm"
                 yearPlaceholder="yyyy"
-                // Optional: Add custom aria labels for accessibility
                 aria-label="Select auction deadline"
                 aria-invalid={!!validationErrors.deadline}
                 aria-errormessage="deadline-error"
@@ -328,8 +335,8 @@ const AuctionItemForm: React.FC<AuctionItemFormProps> = ({ onSubmit }) => {
           {/* Starting Price */}
           <div>
             <div className="flex items-center space-x-2 mb-2">
-              <FaDollarSign className="text-indigo-600" />
-              <label className="text-sm font-medium text-gray-700">
+              <FaDollarSign className="text-amber-500" />
+              <label className="text-sm font-medium text-slate-700">
                 Starting Price
               </label>
             </div>
@@ -342,7 +349,7 @@ const AuctionItemForm: React.FC<AuctionItemFormProps> = ({ onSubmit }) => {
                 className={`w-full p-3 pl-7 border rounded-lg focus:outline-none focus:ring-2 ${
                   validationErrors.startingPrice
                     ? "border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-indigo-500"
+                    : "border-slate-200 focus:ring-amber-500"
                 }`}
                 placeholder="Enter starting price"
                 min="0"
@@ -362,8 +369,8 @@ const AuctionItemForm: React.FC<AuctionItemFormProps> = ({ onSubmit }) => {
             disabled={isSubmitDisabled}
             className={`w-full py-3 rounded-lg text-white font-semibold transition duration-300 ${
               isSubmitDisabled
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg"
+                ? "bg-slate-400 cursor-not-allowed"
+                : "bg-amber-500 hover:bg-amber-600 hover:shadow-lg"
             }`}
           >
             Create Auction Item

@@ -121,3 +121,17 @@ export const deleteItem = async (req: any, res: any) => {
     status: "Item successfully deleted",
   });
 };
+export const getFeaturedItems = async (req: any, res: any) => {
+  try{
+    const featuredItems = await prisma.auctionItems.findMany({
+      where: {
+        featured: true,
+      },
+    });
+    return res.json({
+      featuredItems,
+    });
+  } catch (err) {
+ return res.status(500).json({ error: "failed to get featured items" });
+ }
+};

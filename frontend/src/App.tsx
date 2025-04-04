@@ -9,6 +9,8 @@ import { Toaster } from "react-hot-toast";
 import { UserItems } from "./components/UserItems";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import { ClerkProvider, SignIn } from '@clerk/clerk-react'
+import { VerifyEmail } from "./pages/VerifyEmail";
+import { ResendVerificationEmail } from "./pages/ResendVerificationEmail";
 const Home = lazy(() => import("./pages/Home"));
 const ItemDetails = lazy(() => import("./pages/ItemDetails"));
 const SigninPage = lazy(() => import("./pages/Signin"));
@@ -36,7 +38,8 @@ function App() {
                 <Route path="/user/profile" element={<Userprofile />} />
                 <Route path="/user/items" element={<UserItems />} />
                 <Route path="/admin/admindashboard" element={<AdminDashboard/>}/>
-              
+                <Route path="verifyemail" element={<VerifyEmail/>}/>
+                <Route path="resendverificationemail" element={<ResendVerificationEmail/>}/>
               </Routes>
             </SearchProvider>
           </AuthProvider>

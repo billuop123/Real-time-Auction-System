@@ -1,6 +1,6 @@
 import { useInfo } from "@/hooks/loggedinUser";
 import { jwtDecode } from "jwt-decode";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Notification } from "./Notification";
 import {
   FaPlus,
@@ -20,6 +20,7 @@ import {
   loggedIn,
 } from "@/helperFunctions/apiCalls";
 import toast from "react-hot-toast";
+import { useAuth } from "@/Contexts/AuthContext";
 
 interface DecodedToken {
   userId: string;
@@ -48,7 +49,10 @@ const Navbar: React.FC = () => {
   const userId = useInfo();
   const { items, setItems } = useSearch();
   const [category, setCategory] = useState("");
-
+  const {setIsVerified,isVerified}=useAuth();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const categoryDropdownRef = useRef<HTMLDivElement>(null);
+  
   const categories = [
     { value: "", label: "All Categories" },
     { value: "electronics", label: "Electronics" },
@@ -69,7 +73,13 @@ const Navbar: React.FC = () => {
     }
     fetchSearchResults();
   }, [searchQuery, setItems, category]);
-
+  
+  useEffect(()=>{
+    if(isVerified===false){
+      window.location.href="/resendverificationemail"
+    }
+  },[isVerified])
+  
   useEffect(() => {
     if (!userId) return;
 
@@ -137,6 +147,7 @@ const Navbar: React.FC = () => {
             const data = await getUserInfo(userId);
             setName(data.userInfo.name);
             setPhoto(data.userInfo.photo);
+            setIsVerified(data.userInfo.isVerified);
           }
         }
       } catch (error) {
@@ -147,7 +158,10 @@ const Navbar: React.FC = () => {
     jwtVerify();
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("logout");
     sessionStorage.removeItem("jwt");
     setisLoggedIn(false);
     window.location.href = "/signin";
@@ -170,10 +184,13 @@ const Navbar: React.FC = () => {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownOpen) {
+      // Check if click is outside the dropdown
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setDropdownOpen(false);
       }
-      if (categoryDropdownOpen) {
+      
+      // Check if click is outside the category dropdown
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
         setCategoryDropdownOpen(false);
       }
     };
@@ -182,7 +199,7 @@ const Navbar: React.FC = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [dropdownOpen, categoryDropdownOpen]);
+  }, []);
 
   return (
     <nav className="bg-slate-900 shadow-lg fixed top-0 left-0 w-full z-50">
@@ -207,9 +224,12 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* Category Dropdown - Improved */}
-          <div className="relative mx-2">
+          <div className="relative mx-2" ref={categoryDropdownRef}>
             <button
-              onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setCategoryDropdownOpen(!categoryDropdownOpen);
+              }}
               className="px-4 py-2 rounded-md bg-slate-800 text-white flex items-center justify-between space-x-2 min-w-40 focus:outline-none focus:ring-2 focus:ring-amber-500/30 hover:bg-slate-700 transition duration-300"
             >
               <span>{categories.find(c => c.value === category)?.label || "All Categories"}</span>
@@ -221,7 +241,10 @@ const Navbar: React.FC = () => {
                 {categories.map((cat) => (
                   <button
                     key={cat.value}
-                    onClick={() => handleCategorySelect(cat.value)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCategorySelect(cat.value);
+                    }}
                     className={`block w-full text-left px-4 py-2 text-sm hover:bg-slate-50 ${
                       category === cat.value ? 'text-amber-600 font-medium bg-amber-50' : 'text-slate-700'
                     }`}
@@ -283,7 +306,7 @@ const Navbar: React.FC = () => {
                 </Link>
 
                 {/* User Profile Dropdown - Enhanced */}
-                <div className="relative">
+                <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -317,7 +340,10 @@ const Navbar: React.FC = () => {
                       <Link
                         to="/user/profile"
                         className="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-amber-600"
-                        onClick={() => setDropdownOpen(false)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDropdownOpen(false);
+                        }}
                       >
                         <FaUser className="mr-3 text-slate-400" />
                         Profile
@@ -325,7 +351,10 @@ const Navbar: React.FC = () => {
                       <Link
                         to="/user/items"
                         className="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-amber-600"
-                        onClick={() => setDropdownOpen(false)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDropdownOpen(false);
+                        }}
                       >
                         <svg className="mr-3 h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                           <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />

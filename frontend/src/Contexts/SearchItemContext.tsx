@@ -7,7 +7,7 @@ import React, {
 } from "react";
 
 // Define the type for the `Item` object
-interface Item {
+export interface Item {
   id: string;
   deadline: string;
   startingPrice: number;
@@ -15,8 +15,11 @@ interface Item {
   description: string;
   photo: string;
   userId: string;
-  isApproved:boolean
+  approvalStatus:String
   category:string
+  condition?: string
+  createdAt?: string
+  viewCount?: number
 }
 
 // Define the type for the context value

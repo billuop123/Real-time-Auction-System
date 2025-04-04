@@ -1,16 +1,18 @@
 import { ItemCard } from "@/components/ItemCard";
 import Navbar from "@/components/Navigation";
-import { useSearch } from "@/Contexts/SearchItemContext";
+import { useSearch, Item } from "@/Contexts/SearchItemContext";
 import { getItems } from "@/helperFunctions/apiCalls";
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { FaBoxOpen, FaFire, FaClock, FaPlus, FaSort, FaStar, FaBell, FaFilter } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 export const Home = function () {
   const [isLoading, setIsLoading] = useState(false);
   const [sortOption, setSortOption] = useState("time-left");
   const [showFilters, setShowFilters] = useState(false);
   const { items: allItems, setItems } = useSearch();
-  
+  const [featuredItems,setFeaturedItems]=useState([]);
   // Categories for the website
   const categories = [
     { value: "", label: "All Categories" },
@@ -34,7 +36,7 @@ export const Home = function () {
   });
   
   // Handle filter changes
-  const handleFilterChange = (e) => {
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
   };
@@ -47,13 +49,13 @@ export const Home = function () {
   };
   
   // Handle category quick link click
-  const handleCategoryClick = (categoryValue) => {
+  const handleCategoryClick = (categoryValue:any) => {
     setFilters(prev => ({ ...prev, category: categoryValue }));
     setShowFilters(true);
   };
   
   // Filter for approved items first
-  const approvedItems = allItems.filter(item => item.isApproved);
+  const approvedItems = allItems.filter(item => item.approvalStatus==="APPROVED");
   
   // Active items - deadline is in the future
   const activeItems = approvedItems.filter(
@@ -67,7 +69,7 @@ export const Home = function () {
     if (filters.maxPrice && item.startingPrice > parseFloat(filters.maxPrice)) return false;
     
     // Filter by category
-    if (filters.category && item.category !== filters.category) return false;
+    if (filters.category && item.category !== filters.category.toUpperCase()) return false;
     
     // Filter by condition
     if (filters.condition && item.condition !== filters.condition) return false;
@@ -119,11 +121,14 @@ export const Home = function () {
   
   // Combine active and recently expired items
   const finalSortedItems = [...sortedItems, ...expiredItems];
-  
-  // Generate featured items (normally would come from backend based on popularity/bidding activity)
-  const featuredItems = sortedItems.slice(0, 4);
-  
-  // Fetch items from the API
+  useEffect(()=>{
+    const fetchFeaturedItems=async()=>{
+      const response=await axios.get("http://localhost:3001/api/v1/item/featured");
+      setFeaturedItems(response.data.featuredItems);
+    }
+    fetchFeaturedItems();
+  },[])
+ 
   useEffect(() => {
     const fetchItems = async () => {
       try {
@@ -173,10 +178,12 @@ export const Home = function () {
               Discover exclusive deals on collectibles, luxury items, and unique finds that you won't find anywhere else.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
+            <Link to="/add-item">
               <button className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-amber-500/30 transition duration-300 flex items-center">
                 <FaPlus className="mr-2" />
                 Start an Auction
               </button>
+              </Link>
               <button className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-slate-800/20 border border-slate-700 transition duration-300">
                 Browse Categories
               </button>
@@ -212,7 +219,7 @@ export const Home = function () {
                 <h2 className="text-2xl font-bold text-white">Featured Auctions</h2>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {featuredItems.map((item) => (
+                {featuredItems.map((item: Item) => (
                   <div key={`featured-${item.id}`} className="bg-slate-800 rounded-lg overflow-hidden hover:shadow-lg hover:shadow-amber-500/10 transition duration-300 border border-slate-700">
                     <div className="h-40 bg-slate-300 relative overflow-hidden">
                       {item.photo && (
@@ -429,8 +436,7 @@ export const Home = function () {
               No Auctions Available
             </p>
             <p className="text-base text-slate-500 text-center max-w-md px-4">
-              Looks like there are no active auctions right now. Check back soon
-              or be the first to start an auction!
+        
             </p>
             <button className="mt-8 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-300">
               Start an Auction

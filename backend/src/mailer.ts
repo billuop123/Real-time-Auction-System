@@ -18,11 +18,9 @@ interface EmailOptions {
 export const sendEmail = async (options: EmailOptions) => {
   try {
     console.log("📨 Sending email to:", options.email);
+    const hashedToken = await bcrypt.hash(options.userId.toString(), 10);
 
     if (options.emailType === "VERIFY" || options.emailType === "RESET") {
-      // Generate a hashed token
-      const hashedToken = await bcrypt.hash(options.userId.toString(), 10);
-
       // Update user record based on email type
       const updateData: any = {
         verifiedToken: hashedToken,
@@ -59,7 +57,7 @@ export const sendEmail = async (options: EmailOptions) => {
       case "VERIFY":
         subject = "Verify your email";
         html = `
-          <p>Click <a href="${process.env.domain}/verifyemail?token=${await bcrypt.hash(options.userId.toString(), 10)}">
+          <p>Click <a href="${process.env.domain}/verifyemail?token=${hashedToken}">
             here
           </a> to verify your email.</p>
         `;
@@ -67,7 +65,7 @@ export const sendEmail = async (options: EmailOptions) => {
       case "RESET":
         subject = "Reset your password";
         html = `
-          <p>Click <a href="${process.env.domain}/resetpassword?token=${await bcrypt.hash(options.userId.toString(), 10)}">
+          <p>Click <a href="${process.env.domain}/resetpassword?token=${hashedToken}">
             here
           </a> to reset your password.</p>
         `;

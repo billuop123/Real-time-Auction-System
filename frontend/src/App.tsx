@@ -17,6 +17,7 @@ const SigninPage = lazy(() => import("./pages/Signin"));
 const SignupPage = lazy(() => import("./pages/Signup"));
 const Userprofile = lazy(() => import("./pages/UserProfile"));
 const AuctionItem = lazy(() => import("./pages/AuctionItem"));
+const AdminSignin = lazy(() => import("./pages/AdminSignin"));
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Publishable Key")
@@ -40,6 +41,8 @@ function App() {
                 <Route path="/admin/admindashboard" element={<AdminDashboard/>}/>
                 <Route path="verifyemail" element={<VerifyEmail/>}/>
                 <Route path="resendverificationemail" element={<ResendVerificationEmail/>}/>
+                <Route path="/admin/signin" element={<AdminSignin />} />
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
               </Routes>
             </SearchProvider>
           </AuthProvider>

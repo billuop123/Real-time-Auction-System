@@ -7,9 +7,9 @@ interface ItemCardProps {
   startingPrice: number;
   name: string;
   description: string;
-  id: string;
+  id: number;
   photo?: string;
-  userId: string;
+  userId: number;
   highlight?: boolean;
 }
 

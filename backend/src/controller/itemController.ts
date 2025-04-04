@@ -32,7 +32,21 @@ export const addItem = async (req: any, res: any) => {
 export const allItems = async (req: any, res: any) => {
   const { search, category } = req.query;
   if (!search && !category) {
-    const allItems = await prisma.auctionItems.findMany({});
+    const allItems = await prisma.auctionItems.findMany({
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        photo: true,
+        deadline: true,
+        startingPrice: true,
+        userId: true,
+        approvalStatus: true,
+        category: true,
+        status: true,
+        featured: true
+      }
+    });
 
     return res.json({
       allItems,
@@ -47,6 +61,19 @@ export const allItems = async (req: any, res: any) => {
             mode: "insensitive",
           },
         },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          photo: true,
+          deadline: true,
+          startingPrice: true,
+          userId: true,
+          approvalStatus: true,
+          category: true,
+          status: true,
+          featured: true
+        }
       });
 
       return res.json({
@@ -62,6 +89,19 @@ export const allItems = async (req: any, res: any) => {
       where: {
         category: category.toUpperCase(),
       },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        photo: true,
+        deadline: true,
+        startingPrice: true,
+        userId: true,
+        approvalStatus: true,
+        category: true,
+        status: true,
+        featured: true
+      }
     });
     return res.json({
       allItems: items,
@@ -76,6 +116,19 @@ export const allItems = async (req: any, res: any) => {
           mode: "insensitive",
         },
       },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        photo: true,
+        deadline: true,
+        startingPrice: true,
+        userId: true,
+        approvalStatus: true,
+        category: true,
+        status: true,
+        featured: true
+      }
     });
     return res.json({
       allItems: items,

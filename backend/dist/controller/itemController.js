@@ -35,7 +35,21 @@ exports.addItem = addItem;
 const allItems = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { search, category } = req.query;
     if (!search && !category) {
-        const allItems = yield prismaClient_1.prisma.auctionItems.findMany({});
+        const allItems = yield prismaClient_1.prisma.auctionItems.findMany({
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                photo: true,
+                deadline: true,
+                startingPrice: true,
+                userId: true,
+                approvalStatus: true,
+                category: true,
+                status: true,
+                featured: true
+            }
+        });
         return res.json({
             allItems,
         });
@@ -49,6 +63,19 @@ const allItems = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                         mode: "insensitive",
                     },
                 },
+                select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                    photo: true,
+                    deadline: true,
+                    startingPrice: true,
+                    userId: true,
+                    approvalStatus: true,
+                    category: true,
+                    status: true,
+                    featured: true
+                }
             });
             return res.json({
                 allItems: items,
@@ -64,6 +91,19 @@ const allItems = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             where: {
                 category: category.toUpperCase(),
             },
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                photo: true,
+                deadline: true,
+                startingPrice: true,
+                userId: true,
+                approvalStatus: true,
+                category: true,
+                status: true,
+                featured: true
+            }
         });
         return res.json({
             allItems: items,
@@ -78,6 +118,19 @@ const allItems = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                     mode: "insensitive",
                 },
             },
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                photo: true,
+                deadline: true,
+                startingPrice: true,
+                userId: true,
+                approvalStatus: true,
+                category: true,
+                status: true,
+                featured: true
+            }
         });
         return res.json({
             allItems: items,

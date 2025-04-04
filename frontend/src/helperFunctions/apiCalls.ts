@@ -2,7 +2,7 @@ import axios from "axios";
 
 export const getItems = async function () {
   const response = await axios.get(
-    "http://localhost:3001/api/v1/item/allitems"
+    "http://localhost:3001/api/v1/item/allItems"
   );
   return response;
 };
@@ -38,7 +38,7 @@ export const fetchSearch = async function (
   category: string
 ) {
   const response = await axios.get(
-    `http://localhost:3001/api/v1/item/allitems/?search=${searchQuery}&&category=${category}`
+    `http://localhost:3001/api/v1/item/allItems/?search=${searchQuery}&&category=${category}`
   );
   return response;
 };

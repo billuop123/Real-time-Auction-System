@@ -277,24 +277,29 @@ const Navbar: React.FC = () => {
 
           {/* Navigation Buttons */}
           <div className="flex items-center space-x-4">
-            {!isloggedIn ? (
-              <div className="flex space-x-3">
+            {!isloggedIn && (
+              <div className="flex items-center space-x-4">
                 <Link
                   to="/signin"
-                  className="flex items-center space-x-2 text-white bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-md transition duration-300"
+                  className="text-white hover:text-amber-400 transition"
                 >
-                  <FaSignInAlt className="mr-1" />
-                  <span>Login</span>
+                  Sign In
                 </Link>
                 <Link
                   to="/signup"
-                  className="flex items-center space-x-2 text-slate-900 bg-amber-500 hover:bg-amber-400 px-4 py-2 rounded-md transition duration-300 font-medium"
+                  className="bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 transition"
                 >
-                  <FaUserPlus className="mr-1" />
-                  <span>Sign Up</span>
+                  Sign Up
+                </Link>
+                <Link
+                  to="/admin/signin"
+                  className="text-white hover:text-amber-400 transition"
+                >
+                  Admin
                 </Link>
               </div>
-            ) : (
+            )}
+            {isloggedIn && (
               <div className="flex items-center space-x-4 relative">
                 {/* Add Items Button - Enhanced */}
                 <Link

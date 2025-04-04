@@ -8,18 +8,17 @@ import React, {
 
 // Define the type for the `Item` object
 export interface Item {
-  id: string;
+  id: number;
   deadline: string;
   startingPrice: number;
   name: string;
   description: string;
   photo: string;
-  userId: string;
-  approvalStatus:String
-  category:string
-  condition?: string
-  createdAt?: string
-  viewCount?: number
+  userId: number;
+  approvalStatus: string;
+  category: string;
+  status: string;
+  featured: boolean;
 }
 
 // Define the type for the context value

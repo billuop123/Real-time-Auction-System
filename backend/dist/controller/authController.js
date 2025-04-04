@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isVerified = exports.resendVerificationEmail = exports.verifyEmail = exports.userSigninGoogle = exports.loggedIn = exports.login = exports.signup = void 0;
+exports.adminSignin = exports.isVerified = exports.resendVerificationEmail = exports.verifyEmail = exports.userSigninGoogle = exports.loggedIn = exports.login = exports.signup = void 0;
 const config_1 = require("../config");
 const prismaClient_1 = require("../prismaClient");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
@@ -138,6 +138,7 @@ const userSigninGoogle = (req, res) => __awaiter(void 0, void 0, void 0, functio
 exports.userSigninGoogle = userSigninGoogle;
 const verifyEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { token } = req.body;
+    console.log(token);
     try {
         const user = yield prismaClient_1.prisma.user.findFirst({
             where: {
@@ -215,3 +216,49 @@ const isVerified = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.isVerified = isVerified;
+const adminSignin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email, password } = req.body;
+    try {
+        const admin = yield prismaClient_1.prisma.user.findFirst({
+            where: {
+                email,
+                role: "ADMIN"
+            }
+        });
+        if (!admin) {
+            return res.status(401).json({
+                message: "Invalid admin credentials"
+            });
+        }
+        if (!admin.password) {
+            return res.status(401).json({
+                message: "Invalid admin credentials"
+            });
+        }
+        const isPasswordValid = yield bcryptjs_1.default.compare(password, admin.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({
+                message: "Invalid admin credentials"
+            });
+        }
+        const token = jsonwebtoken_1.default.sign({ userId: admin.id, role: "ADMIN" }, config_1.JWT_SECRET, {
+            expiresIn: "3d",
+        });
+        return res.status(200).json({
+            message: "Successfully logged in as admin",
+            token,
+            user: {
+                id: admin.id,
+                name: admin.name,
+                email: admin.email,
+                role: admin.role
+            }
+        });
+    }
+    catch (error) {
+        return res.status(500).json({
+            message: `Internal Server Error: ${error.message}`
+        });
+    }
+});
+exports.adminSignin = adminSignin;

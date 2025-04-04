@@ -1,6 +1,5 @@
-
 import express from "express";
-import { isVerified, loggedIn, login, resendVerificationEmail, signup, userSigninGoogle, verifyEmail } from "../controller/authController";
+import { isVerified, loggedIn, login, resendVerificationEmail, signup, userSigninGoogle, verifyEmail, adminSignin } from "../controller/authController";
 import { cloudinarySetup } from "../controller/cloudinaryController";
 import {
   getUserInfo,
@@ -18,6 +17,7 @@ userRouter.post("/userProfile", userProfile);
 userRouter.post("/verifyemail",verifyEmail)
 userRouter.post("/resendverificationemail",resendVerificationEmail)
 userRouter.post("/isVerified",isVerified)
+userRouter.post("/admin/signin", adminSignin)
 userRouter.post(
   "/updateProfilePicture",
   upload.single("profilePicture"),  

@@ -18,6 +18,7 @@ exports.userRouter.post("/userProfile", userController_1.userProfile);
 exports.userRouter.post("/verifyemail", authController_1.verifyEmail);
 exports.userRouter.post("/resendverificationemail", authController_1.resendVerificationEmail);
 exports.userRouter.post("/isVerified", authController_1.isVerified);
+exports.userRouter.post("/admin/signin", authController_1.adminSignin);
 exports.userRouter.post("/updateProfilePicture", upload.single("profilePicture"), userController_1.updateProfilePicture);
 exports.userRouter.post("/user-items", userController_1.userItem);
 exports.userRouter.post("/googlesignin", authController_1.userSigninGoogle);

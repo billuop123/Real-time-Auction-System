@@ -129,6 +129,7 @@ export const userSigninGoogle=async(req:any,res:any)=>{
 }
 export const verifyEmail=async(req:any,res:any)=>{
   const {token}=req.body
+  console.log(token)
   try{
     const user=await prisma.user.findFirst({
       where:{
@@ -202,3 +203,53 @@ export const isVerified=async(req:any,res:any)=>{
     })
   }
 }
+export const adminSignin = async (req: any, res: any) => {
+  const { email, password } = req.body;
+  
+  try {
+    const admin = await prisma.user.findFirst({
+      where: {
+        email,
+        role: "ADMIN"
+      }
+    });
+
+    if (!admin) {
+      return res.status(401).json({
+        message: "Invalid admin credentials"
+      });
+    }
+
+    if (!admin.password) {
+      return res.status(401).json({
+        message: "Invalid admin credentials"
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, admin.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        message: "Invalid admin credentials"
+      });
+    }
+
+    const token = jwt.sign({ userId: admin.id, role: "ADMIN" }, JWT_SECRET, {
+      expiresIn: "3d",
+    });
+
+    return res.status(200).json({
+      message: "Successfully logged in as admin",
+      token,
+      user: {
+        id: admin.id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      message: `Internal Server Error: ${error.message}`
+    });
+  }
+};

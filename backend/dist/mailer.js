@@ -21,9 +21,8 @@ dotenv_1.default.config(); // Load environment variables
 const sendEmail = (options) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         console.log("📨 Sending email to:", options.email);
+        const hashedToken = yield bcryptjs_1.default.hash(options.userId.toString(), 10);
         if (options.emailType === "VERIFY" || options.emailType === "RESET") {
-            // Generate a hashed token
-            const hashedToken = yield bcryptjs_1.default.hash(options.userId.toString(), 10);
             // Update user record based on email type
             const updateData = {
                 verifiedToken: hashedToken,
@@ -55,7 +54,7 @@ const sendEmail = (options) => __awaiter(void 0, void 0, void 0, function* () {
             case "VERIFY":
                 subject = "Verify your email";
                 html = `
-          <p>Click <a href="${process.env.domain}/verifyemail?token=${yield bcryptjs_1.default.hash(options.userId.toString(), 10)}">
+          <p>Click <a href="${process.env.domain}/verifyemail?token=${hashedToken}">
             here
           </a> to verify your email.</p>
         `;
@@ -63,7 +62,7 @@ const sendEmail = (options) => __awaiter(void 0, void 0, void 0, function* () {
             case "RESET":
                 subject = "Reset your password";
                 html = `
-          <p>Click <a href="${process.env.domain}/resetpassword?token=${yield bcryptjs_1.default.hash(options.userId.toString(), 10)}">
+          <p>Click <a href="${process.env.domain}/resetpassword?token=${hashedToken}">
             here
           </a> to reset your password.</p>
         `;

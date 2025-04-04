@@ -13,18 +13,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 model User {
-  id           Int           @id @default(autoincrement())
-  email        String        @unique
-  name         String
-  photo        String        @default("https://s3.amazonaws.com/37assets/svn/765-default-avatar.png")
-  password     String?
-  verifiedToken String?
+  id                Int       @id @default(autoincrement())
+  name              String
+  email             String    @unique
+  password          String?
+  photo             String?
+  verifiedToken     String?
   verifiedTokenExpiry DateTime?
-  isVerified Boolean @default(false)
-  auctionItems AuctionItems[]
-  bids Bids[]
-  notifications Notification[]
- }
+  isVerified        Boolean   @default(false)
+  role              String    @default("USER")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  auctionItems      AuctionItems[]
+  bids              Bids[]
+  notifications     Notification[]
+}
 model AuctionItems {
   id           Int           @id @default(autoincrement())
   startingPrice Int
@@ -34,11 +37,11 @@ model AuctionItems {
   bids         Bids[]
   photo        String
   userId       Int
- status Status @default(PENDING)
+  status       Status @default(PENDING)
   approvalStatus ApprovalStatus @default(PENDING)
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category   Category
-  featured Boolean @default(false)
+  category     Category
+  featured     Boolean @default(false)
   notification Notification[]
 }
 enum Category {

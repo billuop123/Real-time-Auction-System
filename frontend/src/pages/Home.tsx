@@ -55,72 +55,61 @@ export const Home = function () {
   };
   
   // Filter for approved items first
-  const approvedItems = allItems.filter(item => item.approvalStatus==="APPROVED");
-  
-  // Active items - deadline is in the future
-  const activeItems = approvedItems.filter(
-    (item) => new Date(item.deadline) > new Date()
-  );
-  
+  const approvedItems = allItems.filter(item => {
+    console.log("Checking approval status for item:", item.id, "Status:", item.approvalStatus);
+    return item.approvalStatus === "APPROVED";
+  });
+  console.log("Approved items count:", approvedItems.length, "Items:", approvedItems);
+
+  // Filter items that are either active or expired within 60 days
+  const validItems = approvedItems.filter(item => {
+    const deadline = new Date(item.deadline).getTime();
+    const now = new Date().getTime();
+    const sixtyDaysInMs = 60 * 24 * 60 * 60 * 1000;
+    
+    // Item is either active (deadline in future) or expired within 60 days
+    const isActive = deadline > now;
+    const isRecentlyExpired = deadline <= now && (now - deadline) <= sixtyDaysInMs;
+    
+    console.log("Item:", item.id, "Deadline:", new Date(deadline), "Is active:", isActive, "Is recently expired:", isRecentlyExpired);
+    return isActive || isRecentlyExpired;
+  });
+  console.log("Valid items count:", validItems.length, "Items:", validItems);
+
   // Apply client-side filters
-  const filteredItems = activeItems.filter(item => {
+  const filteredItems = validItems.filter(item => {
     // Filter by price range
-    if (filters.minPrice && item.startingPrice < parseFloat(filters.minPrice)) return false;
-    if (filters.maxPrice && item.startingPrice > parseFloat(filters.maxPrice)) return false;
+    if (filters.minPrice && item.startingPrice < parseFloat(filters.minPrice)) {
+      console.log("Item filtered out by min price:", item.id);
+      return false;
+    }
+    if (filters.maxPrice && item.startingPrice > parseFloat(filters.maxPrice)) {
+      console.log("Item filtered out by max price:", item.id);
+      return false;
+    }
     
     // Filter by category
-    if (filters.category && item.category !== filters.category.toUpperCase()) return false;
-    
-    // Filter by condition
-    if (filters.condition && item.condition !== filters.condition) return false;
+    if (filters.category && item.category !== filters.category.toUpperCase()) {
+      console.log("Item filtered out by category:", item.id, "Item category:", item.category, "Filter category:", filters.category.toUpperCase());
+      return false;
+    }
     
     return true;
   });
-  
+  console.log("Final filtered items count:", filteredItems.length, "Items:", filteredItems);
+
   // Sort items based on selected option
   const sortedItems = [...filteredItems].sort((a, b) => {
     if (sortOption === "time-left") {
-      // Sort by least time remaining first
-      const timeRemainingA = new Date(a.deadline).getTime() - new Date().getTime();
-      const timeRemainingB = new Date(b.deadline).getTime() - new Date().getTime();
-      return timeRemainingA - timeRemainingB;
+      return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
     } else if (sortOption === "price-high") {
       return b.startingPrice - a.startingPrice;
     } else if (sortOption === "price-low") {
       return a.startingPrice - b.startingPrice;
-    } else if (sortOption === "newest") {
-      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-    } else if (sortOption === "popular") {
-      return (b.viewCount || 0) - (a.viewCount || 0);
     }
     return 0;
   });
   
-  // Expired items - deadline is in the past but not older than 2 days
-  const expiredItems = approvedItems
-    .filter((item) => {
-      const itemDeadline = new Date(item.deadline).getTime();
-      const currentTime = new Date().getTime();
-      const twoDaysInMs = 2 * 24 * 60 * 60 * 1000; // 2 days in milliseconds
-      
-      // Apply the same client-side filters to expired items
-      if (filters.minPrice && item.startingPrice < parseFloat(filters.minPrice)) return false;
-      if (filters.maxPrice && item.startingPrice > parseFloat(filters.maxPrice)) return false;
-      if (filters.category && item.category !== filters.category) return false;
-      if (filters.condition && item.condition !== filters.condition) return false;
-      
-      // Item is expired but not older than 2 days
-      return itemDeadline <= currentTime && (currentTime - itemDeadline) <= twoDaysInMs;
-    })
-    .sort((a, b) => {
-      const timeExpiredA = new Date().getTime() - new Date(a.deadline).getTime();
-      const timeExpiredB = new Date().getTime() - new Date(b.deadline).getTime();
-      
-      return timeExpiredA - timeExpiredB;
-    });
-  
-  // Combine active and recently expired items
-  const finalSortedItems = [...sortedItems, ...expiredItems];
   useEffect(()=>{
     const fetchFeaturedItems=async()=>{
       const response=await axios.get("http://localhost:3001/api/v1/item/featured");
@@ -134,7 +123,7 @@ export const Home = function () {
       try {
         setIsLoading(true);
         const response = await getItems();
-        
+        console.log("Raw items from API:", response.data.allItems);
         setItems(response.data.allItems);
       } catch (error) {
         console.error("Error fetching items:", error);
@@ -361,7 +350,7 @@ export const Home = function () {
           <div className="flex justify-center items-center h-96">
             <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-amber-500"></div>
           </div>
-        ) : finalSortedItems.length > 0 ? (
+        ) : filteredItems.length > 0 ? (
           <>
             {/* Newsletter/Alert Banner */}
             <div className="mb-12 bg-slate-100 rounded-xl p-6 border border-slate-200">
@@ -413,7 +402,7 @@ export const Home = function () {
                 <h2 className="text-2xl font-bold text-slate-800">All Auctions</h2>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-                {finalSortedItems.map((item) => (
+                {filteredItems.map((item) => (
                   <ItemCard
                     key={item.id}
                     deadline={item.deadline}

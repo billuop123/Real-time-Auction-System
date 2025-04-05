@@ -38,7 +38,6 @@ const callKhalti = (formData, req, res) => __awaiter(void 0, void 0, void 0, fun
         // ✅ Store `pidx` with `auctionId` in the database
         yield prismaClient_1.prisma.payment.create({
             data: {
-                //@ts-expect-error
                 pidx: response.data.pidx, // Save pidx from Khalti
                 auctionId: String(formData.purchase_order_id), // Save auction ID
             },
@@ -62,7 +61,6 @@ exports.khaltiRouter.get("/callback", (req, res) => __awaiter(void 0, void 0, vo
     };
     try {
         const response = yield axios_1.default.post("https://a.khalti.com/api/v2/epayment/lookup/", { pidx }, { headers });
-        ///@ts-expect-error
         const paymentStatus = response.data.status;
         console.log("---------------------");
         console.log(paymentStatus);

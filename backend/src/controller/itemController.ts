@@ -137,31 +137,35 @@ export const allItems = async (req: any, res: any) => {
 };
 export const getItem = async (req: any, res: any) => {
   const { id } = req.params;
-  const item = await prisma.auctionItems.findFirst({
-    where: {
-      id: Number(id),
-    },
-    select: {
-      id: true,
-      startingPrice: true,
-      name: true,
-      description: true,
-      deadline: true,
-      photo: true,
-      userId: true,
-      status: true,
-      user: {
-        select: {
-          name: true,
-          photo: true,
-        },
+  try {
+    const item = await prisma.auctionItems.findFirst({
+      where: {
+        id: Number(id)
       },
-    },
-  });
-
-  return res.json({
-    item,
-  });
+      select: {
+        id: true,
+        startingPrice: true,
+        name: true,
+        description: true,
+        deadline: true,
+        photo: true,
+        userId: true,
+        status: true,
+        user: {
+          select: {
+            name: true,
+            photo: true
+          }
+        }
+      }
+    });
+    return res.json({
+      item
+    });
+  } catch (error) {
+    console.error("Error fetching item:", error);
+    return res.status(500).json({ error: "Error fetching item" });
+  }
 };
 export const deleteItem = async (req: any, res: any) => {
   const { id } = req.params;

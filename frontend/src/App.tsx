@@ -11,6 +11,8 @@ import { AdminDashboard } from "./pages/AdminDashboard";
 import { ClerkProvider, SignIn } from '@clerk/clerk-react'
 import { VerifyEmail } from "./pages/VerifyEmail";
 import { ResendVerificationEmail } from "./pages/ResendVerificationEmail";
+import AdminUsers from './pages/AdminUsers';
+import AdminUserDetails from './pages/AdminUserDetails';
 const Home = lazy(() => import("./pages/Home"));
 const ItemDetails = lazy(() => import("./pages/ItemDetails"));
 const SigninPage = lazy(() => import("./pages/Signin"));
@@ -38,11 +40,13 @@ function App() {
                 <Route path="/:id" element={<ItemDetails />} />
                 <Route path="/user/profile" element={<Userprofile />} />
                 <Route path="/user/items" element={<UserItems />} />
-                <Route path="/admin/admindashboard" element={<AdminDashboard/>}/>
+                {/* <Route path="/admin/admindashboard" element={<AdminDashboard/>}/> */}
                 <Route path="verifyemail" element={<VerifyEmail/>}/>
                 <Route path="resendverificationemail" element={<ResendVerificationEmail/>}/>
                 <Route path="/admin/signin" element={<AdminSignin />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/users" element={<AdminUsers />} />
+                <Route path="/admin/users/:userId" element={<AdminUserDetails />} />
               </Routes>
             </SearchProvider>
           </AuthProvider>

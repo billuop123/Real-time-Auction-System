@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { format } from 'date-fns'
-import { CheckCircle, XCircle, Filter, Star } from 'lucide-react'
+import { CheckCircle, XCircle, Filter, Star, Users } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -68,7 +68,7 @@ export const AdminDashboard: React.FC = () => {
     const fetchItems = async () => {
       try {
         const response = await axios.get<{ allItems: Item[] }>("http://localhost:3001/api/v1/item/allItems")
-        // Use the featured status directly from the API response
+
         setItems(response.data.allItems)
         setLoading(false)
       } catch (err) {
@@ -95,7 +95,7 @@ export const AdminDashboard: React.FC = () => {
     
     setIsUpdating(true)
     try {
-      await axios.get(`http://localhost:3001/api/v1/admin/items/${itemId}`)
+      await axios.post(`http://localhost:3001/api/v1/admin/items/${itemId}/approve`)
       
       // Update item status in state
       setItems(prevItems => prevItems.map(item => 
@@ -194,7 +194,17 @@ export const AdminDashboard: React.FC = () => {
   return (
     <Card className="w-full max-w-6xl mx-auto mt-8">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Items Management</CardTitle>
+        <div className="flex items-center space-x-4">
+          <CardTitle>Items Management</CardTitle>
+          <Button 
+            variant="outline" 
+            className="flex items-center space-x-2"
+            onClick={() => navigate('/admin/users')}
+          >
+            <Users className="h-4 w-4" />
+            <span>View Users</span>
+          </Button>
+        </div>
         <div className="flex items-center space-x-2">
           <Filter className="h-4 w-4 text-gray-500" />
           <Select
@@ -357,4 +367,4 @@ export const AdminDashboard: React.FC = () => {
   )
 }
 
-export default AdminDashboard
+export default AdminDashboard;

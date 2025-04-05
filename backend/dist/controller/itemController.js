@@ -140,30 +140,36 @@ const allItems = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.allItems = allItems;
 const getItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
-    const item = yield prismaClient_1.prisma.auctionItems.findFirst({
-        where: {
-            id: Number(id),
-        },
-        select: {
-            id: true,
-            startingPrice: true,
-            name: true,
-            description: true,
-            deadline: true,
-            photo: true,
-            userId: true,
-            status: true,
-            user: {
-                select: {
-                    name: true,
-                    photo: true,
-                },
+    try {
+        const item = yield prismaClient_1.prisma.auctionItems.findFirst({
+            where: {
+                id: Number(id)
             },
-        },
-    });
-    return res.json({
-        item,
-    });
+            select: {
+                id: true,
+                startingPrice: true,
+                name: true,
+                description: true,
+                deadline: true,
+                photo: true,
+                userId: true,
+                status: true,
+                user: {
+                    select: {
+                        name: true,
+                        photo: true
+                    }
+                }
+            }
+        });
+        return res.json({
+            item
+        });
+    }
+    catch (error) {
+        console.error("Error fetching item:", error);
+        return res.status(500).json({ error: "Error fetching item" });
+    }
 });
 exports.getItem = getItem;
 const deleteItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

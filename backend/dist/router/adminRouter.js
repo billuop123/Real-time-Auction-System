@@ -92,3 +92,71 @@ exports.adminRouter.post("/featured/:itemId", (req, res) => __awaiter(void 0, vo
         });
     }
 }));
+// Get all users
+exports.adminRouter.get("/users", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const users = yield prismaClient_1.prisma.user.findMany({
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                photo: true,
+                isVerified: true,
+                createdAt: true,
+                _count: {
+                    select: {
+                        auctionItems: true,
+                        bids: true
+                    }
+                }
+            }
+        });
+        return res.json({ users });
+    }
+    catch (error) {
+        console.error("Error fetching users:", error);
+        return res.status(500).json({ error: "Error fetching users" });
+    }
+}));
+// Get user details with their auctions and bids
+exports.adminRouter.get("/users/:userId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId } = req.params;
+    try {
+        const user = yield prismaClient_1.prisma.user.findUnique({
+            where: { id: Number(userId) },
+            include: {
+                auctionItems: {
+                    select: {
+                        id: true,
+                        name: true,
+                        startingPrice: true,
+                        deadline: true,
+                        status: true,
+                        approvalStatus: true
+                    }
+                },
+                bids: {
+                    select: {
+                        id: true,
+                        price: true,
+                        auction: {
+                            select: {
+                                id: true,
+                                name: true,
+                                status: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        return res.json({ user });
+    }
+    catch (error) {
+        console.error("Error fetching user details:", error);
+        return res.status(500).json({ error: "Error fetching user details" });
+    }
+}));

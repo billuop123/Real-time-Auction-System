@@ -31,7 +31,7 @@ const callKhalti = async (formData: any, req: any, res: any) => {
     // ✅ Store `pidx` with `auctionId` in the database
     await prisma.payment.create({
       data: {
-        //@ts-expect-error
+       
         pidx: response.data.pidx, // Save pidx from Khalti
         auctionId: String(formData.purchase_order_id), // Save auction ID
       },
@@ -62,7 +62,7 @@ khaltiRouter.get("/callback", async (req: any, res: any) => {
       { pidx },
       { headers }
     );
-    ///@ts-expect-error
+  
     const paymentStatus = response.data.status;
     console.log("---------------------");
     console.log(paymentStatus);
@@ -105,4 +105,3 @@ khaltiRouter.get("/callback", async (req: any, res: any) => {
     return res.status(500).json({ message: "Error verifying payment", error });
   }
 });
-

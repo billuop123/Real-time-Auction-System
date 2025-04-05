@@ -36,6 +36,41 @@ exports.adminRouter.get("/unapproveditems", (req, res) => __awaiter(void 0, void
 exports.adminRouter.get("/items/:itemId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { itemId } = req.params;
     try {
+        const item = yield prismaClient_1.prisma.auctionItems.findUnique({
+            where: {
+                id: Number(itemId)
+            },
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                startingPrice: true,
+                deadline: true,
+                photo: true,
+                status: true,
+                approvalStatus: true,
+                featured: true,
+                user: {
+                    select: {
+                        name: true,
+                        photo: true
+                    }
+                }
+            }
+        });
+        if (!item) {
+            return res.status(404).json({ error: "Item not found" });
+        }
+        return res.json({ item });
+    }
+    catch (err) {
+        console.error("Error fetching item:", err);
+        return res.status(500).json({ error: "Failed to fetch item" });
+    }
+}));
+exports.adminRouter.post("/items/:itemId/approve", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { itemId } = req.params;
+    try {
         const updatedValue = yield prismaClient_1.prisma.auctionItems.update({
             where: {
                 id: Number(itemId)
@@ -49,9 +84,8 @@ exports.adminRouter.get("/items/:itemId", (req, res) => __awaiter(void 0, void 0
         });
     }
     catch (err) {
-        return res.json({
-            error: `Failed to approve item ${err.message}`
-        });
+        console.error("Error approving item:", err);
+        return res.status(500).json({ error: `Failed to approve item: ${err.message}` });
     }
 }));
 exports.adminRouter.post("/disapprove/:itemId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {

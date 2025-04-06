@@ -3,11 +3,12 @@ import {
   HighestBidderInfo,
   itemDetails,
   newNotification,
+  resubmitItem,
 } from "@/helperFunctions/apiCalls";
 import { useInfo } from "@/hooks/loggedinUser";
 import axios from "axios";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import toast from "react-hot-toast";
 import {
   FaClock,
@@ -25,6 +26,7 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { ResubmitModal } from "@/components/ResubmitModal";
 
 interface User {
   name: string;
@@ -45,6 +47,7 @@ interface Item {
   userId: number;
   user: User;
   status: string;
+  approvalStatus: string;
 }
 
 export const ItemDetails = function () {
@@ -55,6 +58,11 @@ export const ItemDetails = function () {
   const [bidAmount, setBidAmount] = useState("");
   const [bidError, setBidError] = useState("");
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [isWebSocketConnected, setIsWebSocketConnected] = useState(false);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectAttemptsRef = useRef(0);
+  const MAX_RECONNECT_ATTEMPTS = 5;
+  const RECONNECT_DELAY = 3000; // 3 seconds
   const userId = useInfo();
   const [noBids, setNoBids] = useState(false);
   const [highestBidder, setHighestBidder] = useState<Bidder | null>(null);
@@ -62,6 +70,7 @@ export const ItemDetails = function () {
   const [previousHighestBidder, setPreviousHighestBidder] = useState(0);
   const [isDisabled, setIsDisabled] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState("");
+  const [isSubmittingBid, setIsSubmittingBid] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const pidx = searchParams.get("pidx");
@@ -69,6 +78,8 @@ export const ItemDetails = function () {
   const [contactMessage, setContactMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [contactError, setContactError] = useState("");
+  const [showResubmitModal, setShowResubmitModal] = useState(false);
+  const [isResubmitting, setIsResubmitting] = useState(false);
 
   useEffect(() => {
     if (pidx) {
@@ -147,11 +158,19 @@ isVerified()
     getDetails();
   }, [id]);
 
-  useEffect(() => {
-    const newSocket = new WebSocket("ws://localhost:3001");
-    setSocket(newSocket);
+  const connectWebSocket = useCallback(() => {
+    if (socket) {
+      socket.close();
+    }
 
-    newSocket.onopen = () => console.log("WebSocket connected");
+    const newSocket = new WebSocket("ws://localhost:3001");
+    
+    newSocket.onopen = () => {
+      console.log("WebSocket connected");
+      setIsWebSocketConnected(true);
+      reconnectAttemptsRef.current = 0;
+    };
+
     newSocket.onmessage = async (message) => {
       try {
         const { auctionId } = JSON.parse(message.data);
@@ -161,15 +180,49 @@ isVerified()
           setHighestBidder(HighestBidder);
           setHighestPrice(Number(HighestPrice));
           setPreviousHighestBidder(Number(secondHighestBid));
-          setNoBids(HighestBidder==="no bids");
+          setNoBids(HighestBidder === "no bids");
         }
       } catch (error) {
         console.error("Failed to handle WebSocket message", error);
       }
     };
 
-    return () => newSocket.close();
+    newSocket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+      setIsWebSocketConnected(false);
+    };
+
+    newSocket.onclose = () => {
+      console.log("WebSocket disconnected");
+      setIsWebSocketConnected(false);
+      
+      // Attempt to reconnect if we haven't exceeded max attempts
+      if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+        reconnectAttemptsRef.current += 1;
+        reconnectTimeoutRef.current = setTimeout(() => {
+          console.log(`Attempting to reconnect (${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS})`);
+          connectWebSocket();
+        }, RECONNECT_DELAY);
+      } else {
+        console.log("Max reconnection attempts reached");
+      }
+    };
+
+    setSocket(newSocket);
   }, [id]);
+
+  useEffect(() => {
+    connectWebSocket();
+
+    return () => {
+      if (socket) {
+        socket.close();
+      }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+    };
+  }, [connectWebSocket]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -270,20 +323,18 @@ isVerified()
     const numericBid = Number(bidAmount);
     if (!userId) return;
     
-    if (highestPrice) {
-      if (numericBid > highestPrice) {
-        try {
-          toast.loading("Processing your bid...");
+    setIsSubmittingBid(true);
+    setBidError("");
+    
+    try {
+      if (highestPrice) {
+        if (numericBid > highestPrice) {
           await addBid(numericBid, userId, id);
           const { HighestBidder, HighestPrice, secondHighestBid } =
             await HighestBidderInfo(id);
           setHighestBidder(HighestBidder);
           setHighestPrice(Number(HighestPrice));
           setPreviousHighestBidder(Number(secondHighestBid));
-
-          setShowBidInput(false);
-          setBidAmount("");
-          setBidError("");
           setNoBids(false);
           
           if (secondHighestBid) {
@@ -297,54 +348,37 @@ isVerified()
               previousHighestBidder: Number(highestBidder!.id),
             })
           );
-          toast.dismiss();
           toast.success("Bid successfully placed!");
-        } catch (error) {
-          toast.dismiss();
-          console.error("Bid submission failed", error);
-          setBidError("Failed to submit bid. Please try again.");
-          toast.error("Failed to place bid.");
+        } else {
+          setBidError(`Bid must be higher than Rs ${highestPrice.toFixed(2)}`);
         }
-      } else {
-        setBidError(
-          `Bid must be higher than Rs ${highestPrice.toFixed(2)}`
+      } else if (numericBid > item!.startingPrice) {
+        await addBid(numericBid, userId, id);
+        const { HighestBidder, HighestPrice } = await HighestBidderInfo(id);
+        setHighestBidder(HighestBidder);
+        setHighestPrice(Number(HighestPrice));
+        setNoBids(false);
+        
+        socket?.send(
+          JSON.stringify({
+            type: "new_bid",
+            auctionId: id,
+            price: numericBid,
+          })
         );
+        toast.success("Bid successfully placed!");
+      } else {
+        setBidError(`Bid must be higher than Rs ${item!.startingPrice.toFixed(2)}`);
       }
-    } else {
-      if (numericBid > item!.startingPrice) {
-        try {
-          toast.loading("Processing your bid...");
-          await addBid(numericBid, userId, id);
-          
-          const { HighestBidder, HighestPrice } = await HighestBidderInfo(id);
-          setHighestBidder(HighestBidder);
-          setHighestPrice(Number(HighestPrice));
-          setNoBids(false);
-
-          setShowBidInput(false);
-          setBidAmount("");
-          setBidError("");
-          
-          socket?.send(
-            JSON.stringify({
-              type: "new_bid",
-              auctionId: id,
-              price: numericBid,
-            })
-          );
-          
-          toast.dismiss();
-          toast.success("Bid successfully placed!");
-        } catch (error) {
-          toast.dismiss();
-          console.error("Bid submission failed", error);
-          setBidError("Failed to submit bid. Please try again.");
-          toast.error("Failed to place bid.");
-        }
-      } else {
-        setBidError(
-          `Bid must be higher than Rs ${item!.startingPrice.toFixed(2)}`
-        );
+    } catch (error) {
+      console.error("Bid submission failed", error);
+      setBidError("Failed to submit bid. Please try again.");
+      toast.error("Failed to place bid.");
+    } finally {
+      setIsSubmittingBid(false);
+      if (!bidError) {
+        setShowBidInput(false);
+        setBidAmount("");
       }
     }
   };
@@ -380,6 +414,23 @@ isVerified()
     }
   };
 
+  const handleResubmit = async () => {
+    try {
+      setIsResubmitting(true);
+      await resubmitItem(id);
+      toast.success("Item resubmitted for approval");
+      // Refresh item details
+      const updatedItem = await itemDetails(id);
+      setItem(updatedItem);
+    } catch (error) {
+      console.error("Error resubmitting item:", error);
+      toast.error("Failed to resubmit item");
+    } finally {
+      setIsResubmitting(false);
+      setShowResubmitModal(false);
+    }
+  };
+
   if (!item) {
     return (
       <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-indigo-100 to-purple-100">
@@ -397,15 +448,16 @@ isVerified()
       {showBidInput && (
         <div
           className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm"
-          onClick={() => setShowBidInput(false)}
+          onClick={() => !isSubmittingBid && setShowBidInput(false)}
         >
           <div
             className="bg-white rounded-2xl shadow-2xl p-8 w-96 relative transform transition-all duration-300 ease-in-out"
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              onClick={() => setShowBidInput(false)}
+              onClick={() => !isSubmittingBid && setShowBidInput(false)}
               className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 transition-colors"
+              disabled={isSubmittingBid}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -424,7 +476,7 @@ isVerified()
             </button>
 
             <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center">
-              Place Your Bid
+              {isSubmittingBid ? "Processing Your Bid..." : "Place Your Bid"}
             </h2>
 
             <div className="space-y-4">
@@ -449,6 +501,7 @@ isVerified()
                   }`}
                   min={highestPrice ? highestPrice + 1 : item.startingPrice + 1}
                   step="1"
+                  disabled={isSubmittingBid}
                 />
               </div>
 
@@ -459,18 +512,18 @@ isVerified()
                 </div>
               )}
 
-              <div className="bg-amber-50 p-3 rounded-lg text-sm text-amber-700 flex items-start space-x-2">
-                <FaGavel className="mt-1 flex-shrink-0" />
-                <p>
-                  Your bid must be at least Rs 1 more than the current highest bid.
-                  Once placed, bids cannot be retracted.
-                </p>
-              </div>
+              {isSubmittingBid && (
+                <div className="flex items-center justify-center space-x-2 text-amber-600">
+                  <div className="w-4 h-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span>Processing your bid...</span>
+                </div>
+              )}
 
               <div className="flex space-x-4 mt-6">
                 <button
                   onClick={() => setShowBidInput(false)}
                   className="flex-1 py-3 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition"
+                  disabled={isSubmittingBid}
                 >
                   Cancel
                 </button>
@@ -483,15 +536,16 @@ isVerified()
                     Number(bidAmount) <= highestPrice ||
                     Number(bidAmount) <= Number(item.startingPrice) ||
                     isDisabled ||
-                    !bidAmount
+                    !bidAmount ||
+                    isSubmittingBid
                   }
                   className={`flex-1 py-3 rounded-lg transition ${
-                    bidError || !bidAmount || isOwner || isDisabled || highestBidder?.id === Number(userId)
+                    bidError || !bidAmount || isOwner || isDisabled || highestBidder?.id === Number(userId) || isSubmittingBid
                       ? "bg-slate-200 text-slate-500 cursor-not-allowed"
                       : "bg-amber-500 text-white hover:bg-amber-600"
                   }`}
                 >
-                  Place Bid
+                  {isSubmittingBid ? "Processing..." : "Place Bid"}
                 </button>
               </div>
             </div>
@@ -749,6 +803,32 @@ isVerified()
           </div>
         </div>
       )}
+
+      {/* Add resubmit button for disapproved items */}
+      {item?.approvalStatus === "DISAPPROVED" && (
+        <div className="mt-6">
+          <button
+            onClick={() => setShowResubmitModal(true)}
+            className="w-full px-6 py-3 bg-amber-500 text-white font-semibold rounded-lg shadow-lg hover:bg-amber-600 transition duration-300 flex items-center justify-center"
+            disabled={isResubmitting}
+          >
+            {isResubmitting ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white mr-2"></div>
+            ) : (
+              <FaGavel className="mr-2" />
+            )}
+            Resubmit for Approval
+          </button>
+        </div>
+      )}
+
+      {/* Resubmit Modal */}
+      <ResubmitModal
+        isOpen={showResubmitModal}
+        onClose={() => setShowResubmitModal(false)}
+        onConfirm={handleResubmit}
+        itemName={item?.name || ""}
+      />
     </>
   );
 };

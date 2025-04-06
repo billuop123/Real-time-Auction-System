@@ -186,3 +186,26 @@ adminRouter.get("/items/:itemId", async (req: any, res: any) => {
         return res.status(500).json({ error: "Failed to fetch item" });
     }
 });
+
+// Resubmit disapproved item
+adminRouter.post("/items/:itemId/resubmit", async (req: any, res: any) => {
+    const { itemId } = req.params;
+    const { deadline } = req.body;
+    try {
+        const updatedValue = await prisma.auctionItems.update({
+            where: {
+                id: Number(itemId)
+            },
+            data: {
+                approvalStatus: "PENDING",
+                deadline: deadline // The date is already in ISO format from frontend
+            }
+        });
+        return res.json({
+            updatedValue
+        });
+    } catch (err: any) {
+        console.error("Error resubmitting item:", err);
+        return res.status(500).json({ error: `Failed to resubmit item: ${err.message}` });
+    }
+});

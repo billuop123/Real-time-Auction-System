@@ -93,7 +93,7 @@ export const addBid = async function (
   userId: string,
   id: string | undefined
 ) {
-  await axios.post(`http://localhost:3001/api/v1/bid/add-bid`, {
+  await axios.post(`http://localhost:3001/api/v1/bid/addBid`, {
     bidAmount: numericBid,
     userId,
     auctionId: Number(id),
@@ -124,4 +124,10 @@ export const signin = async function (formData:any) {
     password: formData.password,
   });
   return data;
+};
+export const resubmitItem = async function (itemId: string | undefined) {
+  const response = await axios.post(
+    `http://localhost:3001/api/v1/admin/items/${itemId}/resubmit`
+  );
+  return response;
 };

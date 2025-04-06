@@ -13,6 +13,7 @@ type NotificationType = {
     photo: string;
     name: string;
   };
+  message: string;
 };
 
 export function Notification({ notifications }: any) {
@@ -20,7 +21,7 @@ export function Notification({ notifications }: any) {
   const [safeNotifications, setSafeNotifications] = useState<
     NotificationType[]
   >([]);
-
+  console.log(notifications);
   const userId = useInfo();
   useEffect(() => {
     if (Array.isArray(notifications) && notifications.length > 0) {
@@ -130,8 +131,7 @@ export function Notification({ notifications }: any) {
                           {notification.auction.name}
                         </p>
                         <p className="text-sm text-gray-500">
-                          This item that you have bidded initially is outbidded
-                          by someone
+                         {notification.message}
                         </p>
                         <p className="text-xs text-gray-400 mt-1">Just now</p>
                       </div>

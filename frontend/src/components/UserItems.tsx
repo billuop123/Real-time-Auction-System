@@ -5,6 +5,7 @@ import { toast, Toaster } from "react-hot-toast";
 import MyItemCard from "./MyItemCard";
 import { Link, useNavigate } from "react-router-dom";
 import { FaBoxOpen, FaPlus, FaFilter, FaSort } from "react-icons/fa";
+import { ResubmitModal } from "@/components/ResubmitModal";
 
 // Define an interface for the item structure
 interface Item {
@@ -28,6 +29,9 @@ export const UserItems: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState("newest");
   const [filterStatus, setFilterStatus] = useState("ALL");
+  const [showResubmitModal, setShowResubmitModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+  const [isResubmitting, setIsResubmitting] = useState(false);
   const navigate = useNavigate();
 
   // Fetch user items
@@ -118,6 +122,40 @@ export const UserItems: React.FC = () => {
     }
     return 0;
   });
+
+  // Handle item resubmission
+  const handleResubmit = async (newDeadline: Date) => {
+    if (!selectedItem) return;
+
+    try {
+      setIsResubmitting(true);
+      const response = await axios.post(`http://localhost:3001/api/v1/admin/items/${selectedItem.id}/resubmit`, {
+        deadline: newDeadline.toISOString()
+      });
+      
+      // Update the item's status and deadline in the local state
+      setItems(prevItems => 
+        prevItems.map(item => 
+          item.id === selectedItem.id 
+            ? { 
+                ...item, 
+                approvalStatus: "PENDING", 
+                deadline: new Date(response.data.updatedValue.deadline) // Use the date from the response
+              }
+            : item
+        )
+      );
+      
+      toast.success("Item resubmitted for approval");
+    } catch (error) {
+      console.error("Error resubmitting item:", error);
+      toast.error("Failed to resubmit item");
+    } finally {
+      setIsResubmitting(false);
+      setShowResubmitModal(false);
+      setSelectedItem(null);
+    }
+  };
 
   // Loading state
   if (isLoading) {
@@ -216,9 +254,24 @@ export const UserItems: React.FC = () => {
               category={item.category}
               viewCount={item.viewCount}
               onDelete={handleDeleteItem}
+              onResubmit={() => {
+                setSelectedItem(item);
+                setShowResubmitModal(true);
+              }}
             />
           ))}
         </div>
+
+        {/* Resubmit Modal */}
+        <ResubmitModal
+          isOpen={showResubmitModal}
+          onClose={() => {
+            setShowResubmitModal(false);
+            setSelectedItem(null);
+          }}
+          onConfirm={handleResubmit}
+          itemName={selectedItem?.name || ""}
+        />
       </div>
     </div>
   );

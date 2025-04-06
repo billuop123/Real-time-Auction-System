@@ -1,0 +1,17 @@
+{
+  "scripts": {
+    "dev:bid": "tsc -b &&  node dist/index.js",
+    "dev:check-auctions": "tsc -b &&  node dist/checkAuctions.js",
+    "check-auctions": "ts-node src/checkAuctions.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.10.0",
+    "kafkajs": "^2.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "prisma": "^5.10.0",
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2"
+  }
+}

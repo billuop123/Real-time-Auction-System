@@ -37,6 +37,7 @@ exports.notificationRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, v
             seen: false,
         },
         select: {
+            message: true,
             auction: {
                 select: {
                     photo: true,

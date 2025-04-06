@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { formatDistance } from "date-fns";
 import { Link } from "react-router-dom";
-import { FaClock, FaTag, FaEye, FaTrash, FaCheckCircle, FaTimesCircle, FaHourglassHalf } from "react-icons/fa";
+import { FaClock, FaTag, FaEye, FaTrash, FaCheckCircle, FaTimesCircle, FaHourglassHalf, FaGavel } from "react-icons/fa";
 
 interface MyItemCardProps {
   id: string;
@@ -15,6 +15,7 @@ interface MyItemCardProps {
   category: string;
   viewCount: number;
   onDelete: (itemId: string) => void;
+  onResubmit: () => void;
 }
 
 const MyItemCard: React.FC<MyItemCardProps> = ({
@@ -29,6 +30,7 @@ const MyItemCard: React.FC<MyItemCardProps> = ({
   category,
   viewCount,
   onDelete,
+  onResubmit,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -124,6 +126,15 @@ const MyItemCard: React.FC<MyItemCardProps> = ({
               >
                 View
               </Link>
+              {approvalStatus === "DISAPPROVED" && (
+                <button
+                  onClick={onResubmit}
+                  className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors duration-200 flex items-center"
+                >
+                  <FaGavel className="mr-1" />
+                  Resubmit
+                </button>
+              )}
               <button
                 onClick={handleDeleteClick}
                 className="p-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"

@@ -22,13 +22,18 @@ notificationRouter.get("/:id", async (req: any, res: any) => {
       seen: false,
     },
     select: {
+      message:true,
       auction: {
         select: {
           photo: true,
           name: true,
+          
         },
+      
       },
+    
     },
+  
   });
   console.log(notifications);
   return res.json({

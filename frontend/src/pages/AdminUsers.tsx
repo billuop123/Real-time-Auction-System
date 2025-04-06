@@ -17,7 +17,9 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { DeleteConfirmationModal } from '@/components/DeleteConfirmationModal';
+import { toast } from 'react-hot-toast';
 
 interface User {
   id: number;
@@ -36,25 +38,48 @@ export const AdminUsers: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get("http://localhost:3001/api/v1/admin/users");
-        setUsers(response.data.users);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to fetch users');
-        setLoading(false);
-      }
-    };
-
     fetchUsers();
   }, []);
 
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/v1/admin/users");
+      setUsers(response.data.users);
+      setLoading(false);
+    } catch (err) {
+      setError('Failed to fetch users');
+      setLoading(false);
+    }
+  };
+
   const handleUserClick = (userId: number) => {
     navigate(`/admin/users/${userId}`);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, user: User) => {
+    e.stopPropagation();
+    setSelectedUser(user);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedUser) return;
+
+    try {
+      await axios.delete(`http://localhost:3001/api/v1/admin/users/${selectedUser.id}`);
+      toast.success('User deleted successfully');
+      setUsers(users.filter(user => user.id !== selectedUser.id));
+    } catch (error) {
+      toast.error('Failed to delete user');
+    } finally {
+      setDeleteModalOpen(false);
+      setSelectedUser(null);
+    }
   };
 
   if (loading) return <div>Loading...</div>;
@@ -75,6 +100,7 @@ export const AdminUsers: React.FC = () => {
               <TableHead>Auctions</TableHead>
               <TableHead>Bids</TableHead>
               <TableHead>Joined</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -116,14 +142,30 @@ export const AdminUsers: React.FC = () => {
                 </TableCell>
                 <TableCell>{user._count.auctionItems}</TableCell>
                 <TableCell>{user._count.bids}</TableCell>
+                <TableCell>{format(new Date(user.createdAt), 'MMM d, yyyy')}</TableCell>
                 <TableCell>
-                  {format(new Date(user.createdAt), 'MMM d, yyyy')}
+                  <button
+                    onClick={(e) => handleDeleteClick(e, user)}
+                    className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </CardContent>
+
+      <DeleteConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setSelectedUser(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        userName={selectedUser?.name || ''}
+      />
     </Card>
   );
 };

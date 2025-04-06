@@ -1,18 +1,50 @@
 import express from "express";
+import { Kafka } from 'kafkajs';
 import { prisma } from "../prismaClient";
+
+const kafka = new Kafka({
+  clientId: 'bid-producer',
+  brokers: ['localhost:9092']
+});
+
+const producer = kafka.producer();
+
 export const bidRouter = express();
-bidRouter.post("/add-bid", async (req: any, res: any) => {
+
+bidRouter.post("/addBid", async (req: any, res: any) => {
   const { bidAmount, userId, auctionId } = req.body;
-  const newBid = await prisma.bids.create({
-    data: {
-      price: bidAmount,
-      userId,
-      auctionId,
-    },
-  });
-  return res.json({
-    newBid,
-  });
+
+  // Validate required fields
+  if (!bidAmount || !userId || !auctionId) {
+    return res.status(400).json({ 
+      error: "Missing required fields. Please provide price, userId, and auctionId" 
+    });
+  }
+
+  try {
+    // Send bid to Kafka
+    await producer.connect();
+    await producer.send({
+      topic: 'bids',
+      messages: [
+        {
+          value: JSON.stringify({
+            price: Number(bidAmount),
+            userId: Number(userId),
+            auctionId: Number(auctionId)
+          })
+        }
+      ]
+    });
+    await producer.disconnect();
+
+    return res.json({
+      message: "Bid request sent for processing"
+    });
+  } catch (error) {
+    console.error("Error sending bid to Kafka:", error);
+    return res.status(500).json({ error: "Failed to process bid" });
+  }
 });
 
 bidRouter.get("/highest-bidder/:auctionId", async (req: any, res: any) => {

@@ -14,20 +14,46 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.bidRouter = void 0;
 const express_1 = __importDefault(require("express"));
+const kafkajs_1 = require("kafkajs");
 const prismaClient_1 = require("../prismaClient");
+const kafka = new kafkajs_1.Kafka({
+    clientId: 'bid-producer',
+    brokers: ['localhost:9092']
+});
+const producer = kafka.producer();
 exports.bidRouter = (0, express_1.default)();
-exports.bidRouter.post("/add-bid", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.bidRouter.post("/addBid", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { bidAmount, userId, auctionId } = req.body;
-    const newBid = yield prismaClient_1.prisma.bids.create({
-        data: {
-            price: bidAmount,
-            userId,
-            auctionId,
-        },
-    });
-    return res.json({
-        newBid,
-    });
+    // Validate required fields
+    if (!bidAmount || !userId || !auctionId) {
+        return res.status(400).json({
+            error: "Missing required fields. Please provide price, userId, and auctionId"
+        });
+    }
+    try {
+        // Send bid to Kafka
+        yield producer.connect();
+        yield producer.send({
+            topic: 'bids',
+            messages: [
+                {
+                    value: JSON.stringify({
+                        price: Number(bidAmount),
+                        userId: Number(userId),
+                        auctionId: Number(auctionId)
+                    })
+                }
+            ]
+        });
+        yield producer.disconnect();
+        return res.json({
+            message: "Bid request sent for processing"
+        });
+    }
+    catch (error) {
+        console.error("Error sending bid to Kafka:", error);
+        return res.status(500).json({ error: "Failed to process bid" });
+    }
 }));
 exports.bidRouter.get("/highest-bidder/:auctionId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { auctionId } = req.params;

@@ -80,6 +80,7 @@ enum Status{
   auctionId Int
   auction AuctionItems @relation(fields: [auctionId],references: [id],onDelete: Cascade)
   seen Boolean
+  message String @default("This item that you have bidded initially is outbidded by someone")
  }
  model Payment {
   id         String @id @default(uuid())

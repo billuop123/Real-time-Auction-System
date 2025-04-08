@@ -135,7 +135,7 @@ export const ItemCard: React.FC<ItemCardProps> = function ({
           <div className="flex items-center space-x-2">
             <FaTag className="text-green-600" />
             <span className="text-sm font-medium text-gray-800">
-              Rs {startingPrice.toLocaleString()}
+            ₹ {startingPrice.toLocaleString()}
             </span>
           </div>
         </div>

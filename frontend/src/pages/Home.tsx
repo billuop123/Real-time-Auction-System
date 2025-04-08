@@ -100,8 +100,16 @@ export const Home = function () {
 
   // Sort items based on selected option
   const sortedItems = [...filteredItems].sort((a, b) => {
+    const aTimeRemaining = new Date(a.deadline).getTime() - new Date().getTime();
+    const bTimeRemaining = new Date(b.deadline).getTime() - new Date().getTime();
+    
+    // First, sort by whether the item is closed or not
+    if (aTimeRemaining <= 0 && bTimeRemaining > 0) return 1; // Move closed items to end
+    if (aTimeRemaining > 0 && bTimeRemaining <= 0) return -1; // Keep active items at start
+    
+    // Then apply the selected sorting option for items in the same category (both closed or both active)
     if (sortOption === "time-left") {
-      return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+      return aTimeRemaining - bTimeRemaining;
     } else if (sortOption === "price-high") {
       return b.startingPrice - a.startingPrice;
     } else if (sortOption === "price-low") {
@@ -139,7 +147,8 @@ export const Home = function () {
   const expiringSoonItems = sortedItems.filter(
     item => {
       const timeRemaining = new Date(item.deadline).getTime() - new Date().getTime();
-      return timeRemaining <= 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+      return timeRemaining <= 24 * 60 * 60 * 1000 && // 24 hours in milliseconds
+             timeRemaining > 0; // Only include items that haven't ended yet
     }
   );
   
@@ -173,9 +182,9 @@ export const Home = function () {
                 Start an Auction
               </button>
               </Link>
-              <button className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-slate-800/20 border border-slate-700 transition duration-300">
+              {/* <button className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-slate-800/20 border border-slate-700 transition duration-300">
                 Browse Categories
-              </button>
+              </button> */}
             </div>
           </div>
         </div>
@@ -269,7 +278,7 @@ export const Home = function () {
                 <option value="price-high">Price (High to Low)</option>
                 <option value="price-low">Price (Low to High)</option>
                 <option value="newest">Newest First</option>
-                <option value="popular">Most Popular</option>
+               
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-700">
                 <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -353,7 +362,7 @@ export const Home = function () {
         ) : filteredItems.length > 0 ? (
           <>
             {/* Newsletter/Alert Banner */}
-            <div className="mb-12 bg-slate-100 rounded-xl p-6 border border-slate-200">
+            {/* <div className="mb-12 bg-slate-100 rounded-xl p-6 border border-slate-200">
               <div className="flex flex-col md:flex-row md:items-center justify-between">
                 <div className="mb-4 md:mb-0 md:mr-6">
                   <h3 className="text-xl font-bold text-slate-800 mb-2">Never Miss an Auction</h3>
@@ -370,7 +379,7 @@ export const Home = function () {
                   </button>
                 </div>
               </div>
-            </div>
+            </div> */}
             
             {expiringSoonItems.length > 0 && (
               <div className="mb-12">
@@ -402,7 +411,7 @@ export const Home = function () {
                 <h2 className="text-2xl font-bold text-slate-800">All Auctions</h2>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-                {filteredItems.map((item) => (
+                {sortedItems.map((item) => (
                   <ItemCard
                     key={item.id}
                     deadline={item.deadline}

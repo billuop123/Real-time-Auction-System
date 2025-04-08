@@ -335,7 +335,7 @@ const navigate=useNavigate()
           {/* Starting Price */}
           <div>
             <div className="flex items-center space-x-2 mb-2">
-              <FaDollarSign className="text-amber-500" />
+            <p>₹  </p>
               <label className="text-sm font-medium text-slate-700">
                 Starting Price
               </label>

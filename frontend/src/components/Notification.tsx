@@ -133,7 +133,7 @@ export function Notification({ notifications }: any) {
                         <p className="text-sm text-gray-500">
                          {notification.message}
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">Just now</p>
+                        {/* <p className="text-xs text-gray-400 mt-1">Just now</p> */}
                       </div>
                     </motion.div>
                   ))}

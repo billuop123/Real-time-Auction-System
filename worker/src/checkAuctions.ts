@@ -33,7 +33,7 @@ const checkEndedAuctions = async () => {
           }
         ]
       });
-      console.log(`Sent auction end notification for auction ${auction.name }`);
+      console.log(`Sent auction end notification for auction ${auction.name}`);
     }
   } catch (error) {
     console.error('Error checking auctions:', error);

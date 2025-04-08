@@ -59,6 +59,7 @@ enum Status{
   PENDING
   SOLD
   UNSOLD
+  WON
 }
  enum ApprovalStatus{
   APPROVED

@@ -16,6 +16,7 @@ exports.bidRouter = void 0;
 const express_1 = __importDefault(require("express"));
 const kafkajs_1 = require("kafkajs");
 const prismaClient_1 = require("../prismaClient");
+const bidController_1 = require("../controller/bidController");
 const kafka = new kafkajs_1.Kafka({
     clientId: 'bid-producer',
     brokers: ['localhost:9092']
@@ -23,6 +24,7 @@ const kafka = new kafkajs_1.Kafka({
 const producer = kafka.producer();
 exports.bidRouter = (0, express_1.default)();
 exports.bidRouter.post("/addBid", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     const { bidAmount, userId, auctionId } = req.body;
     // Validate required fields
     if (!bidAmount || !userId || !auctionId) {
@@ -45,56 +47,57 @@ exports.bidRouter.post("/addBid", (req, res) => __awaiter(void 0, void 0, void 0
                 }
             ]
         });
-        yield producer.disconnect();
+        // Wait for the bid to be processed
+        let processed = false;
+        let attempts = 0;
+        const maxAttempts = 10;
+        const checkInterval = 500; // 500ms
+        while (!processed && attempts < maxAttempts) {
+            // Check if the bid was processed by looking at the highest bid
+            const auction = yield prismaClient_1.prisma.auctionItems.findUnique({
+                where: { id: Number(auctionId) },
+                include: {
+                    bids: {
+                        orderBy: { price: 'desc' },
+                        take: 1,
+                        include: { user: true }
+                    }
+                }
+            });
+            if (((_a = auction === null || auction === void 0 ? void 0 : auction.bids[0]) === null || _a === void 0 ? void 0 : _a.price) === Number(bidAmount) &&
+                ((_b = auction === null || auction === void 0 ? void 0 : auction.bids[0]) === null || _b === void 0 ? void 0 : _b.userId) === Number(userId)) {
+                processed = true;
+                break;
+            }
+            attempts++;
+            yield new Promise(resolve => setTimeout(resolve, checkInterval));
+        }
+        if (!processed) {
+            throw new Error("Bid processing timeout");
+        }
+        // Get the updated bid information
+        const { HighestBidder, HighestPrice, secondHighestBid } = yield (0, bidController_1.HighestBidderInfo)(auctionId);
         return res.json({
-            message: "Bid request sent for processing"
+            message: "Bid processed successfully",
+            highestBidder: HighestBidder,
+            highestPrice: HighestPrice,
+            secondHighestBid
         });
     }
     catch (error) {
-        console.error("Error sending bid to Kafka:", error);
+        console.error("Error processing bid:", error);
         return res.status(500).json({ error: "Failed to process bid" });
+    }
+    finally {
+        yield producer.disconnect();
     }
 }));
 exports.bidRouter.get("/highest-bidder/:auctionId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { auctionId } = req.params;
-    const bid = yield prismaClient_1.prisma.bids.findMany({
-        where: {
-            auctionId: Number(auctionId),
-        },
-    });
-    if (bid.length === 0) {
-        return res.json({
-            HighestBidder: "no bids",
-        });
-    }
-    const highestBid = bid.reduce((highest, current) => {
-        return current.price > highest.price ? current : highest;
-    }, bid[0]);
-    const userIdWithHighestPrice = highestBid.userId;
-    const HighestPrice = highestBid.price;
-    console.log(bid);
-    const secondHighestBid = bid
-        .filter((current) => current !==
-        bid.reduce((highest, current) => {
-            return current.price > highest.price ? current : highest;
-        }, bid[0]))
-        .reduce((secondHighest, current) => {
-        return current.price > secondHighest.price ? current : secondHighest;
-    }, bid[0]);
-    console.log(highestBid, secondHighestBid);
-    const HighestBidder = yield prismaClient_1.prisma.user.findFirst({
-        where: {
-            id: userIdWithHighestPrice,
-        },
-        select: {
-            name: true,
-            photo: true,
-            id: true,
-        },
-    });
+    const { HighestBidder, HighestPrice, secondHighestBid } = yield (0, bidController_1.HighestBidderInfo)(auctionId);
     return res.json({
         HighestBidder,
         HighestPrice,
-        secondHighestBid: secondHighestBid.userId,
+        secondHighestBid
     });
 }));

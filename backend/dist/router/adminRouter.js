@@ -210,7 +210,7 @@ exports.adminRouter.post("/items/:itemId/resubmit", (req, res) => __awaiter(void
             },
             data: {
                 approvalStatus: "PENDING",
-                deadline: new Date(deadline)
+                deadline: deadline // The date is already in ISO format from frontend
             }
         });
         return res.json({

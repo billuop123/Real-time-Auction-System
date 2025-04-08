@@ -118,12 +118,12 @@ export const SigninPage: React.FC = () => {
 
             {/* Forgot Password Link */}
             <div className="text-right">
-              <Link
+              {/* <Link
                 to="/forgot-password"
                 className="text-sm text-amber-600 hover:underline"
               >
                 Forgot Password?
-              </Link>
+              </Link> */}
             </div>
 
             {/* Submit Button */}

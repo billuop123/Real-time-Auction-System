@@ -74,17 +74,17 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                             include: { user: true }
                         });
                         if (highestBid) {
-                            // Update auction status to SOLD
-                            yield prismaClient_1.prisma.auctionItems.update({
-                                where: { id: auctionId },
-                                data: { status: 'SOLD' }
+                            // Update auction status to WON
+                            const auction = yield prismaClient_1.prisma.auctionItems.update({
+                                where: { id: Number(auctionId) },
+                                data: { status: "WON" }
                             });
                             // Create notification for the winner
                             yield prismaClient_1.prisma.notification.create({
                                 data: {
                                     userId: highestBid.userId,
                                     auctionId,
-                                    message: `Congratulations! You won the auction for ${highestBid.price}`
+                                    message: `Congratulations! You won the auction for Rs ${highestBid.price} for item ${auction.name}. Please complete the payment to claim your item.`
                                 }
                             });
                             console.log(`Auction ${auctionId} ended. Winner: ${highestBid.user.name}`);

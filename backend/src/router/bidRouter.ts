@@ -1,6 +1,7 @@
 import express from "express";
 import { Kafka } from 'kafkajs';
 import { prisma } from "../prismaClient";
+import { HighestBidderInfo } from "../controller/bidController";
 
 const kafka = new Kafka({
   clientId: 'bid-producer',
@@ -36,62 +37,63 @@ bidRouter.post("/addBid", async (req: any, res: any) => {
         }
       ]
     });
-    await producer.disconnect();
+
+    // Wait for the bid to be processed
+    let processed = false;
+    let attempts = 0;
+    const maxAttempts = 10;
+    const checkInterval = 500; // 500ms
+
+    while (!processed && attempts < maxAttempts) {
+      // Check if the bid was processed by looking at the highest bid
+      const auction = await prisma.auctionItems.findUnique({
+        where: { id: Number(auctionId) },
+        include: {
+          bids: {
+            orderBy: { price: 'desc' },
+            take: 1,
+            include: { user: true }
+          }
+        }
+      });
+
+      if (auction?.bids[0]?.price === Number(bidAmount) && 
+          auction?.bids[0]?.userId === Number(userId)) {
+        processed = true;
+        break;
+      }
+
+      attempts++;
+      await new Promise(resolve => setTimeout(resolve, checkInterval));
+    }
+
+    if (!processed) {
+      throw new Error("Bid processing timeout");
+    }
+
+    // Get the updated bid information
+    const { HighestBidder, HighestPrice, secondHighestBid } = await HighestBidderInfo(auctionId);
 
     return res.json({
-      message: "Bid request sent for processing"
+      message: "Bid processed successfully",
+      highestBidder: HighestBidder,
+      highestPrice: HighestPrice,
+      secondHighestBid
     });
   } catch (error) {
-    console.error("Error sending bid to Kafka:", error);
+    console.error("Error processing bid:", error);
     return res.status(500).json({ error: "Failed to process bid" });
+  } finally {
+    await producer.disconnect();
   }
 });
 
 bidRouter.get("/highest-bidder/:auctionId", async (req: any, res: any) => {
   const { auctionId } = req.params;
-  const bid = await prisma.bids.findMany({
-    where: {
-      auctionId: Number(auctionId),
-    },
-  });
-  if (bid.length === 0) {
-    return res.json({
-      HighestBidder: "no bids",
-    });
-  }
-  const highestBid = bid.reduce((highest: any, current: any) => {
-    return current.price > highest.price ? current : highest;
-  }, bid[0]);
-
-  const userIdWithHighestPrice = highestBid.userId;
-  const HighestPrice = highestBid.price;
-  console.log(bid);
-
-  const secondHighestBid = bid
-    .filter(
-      (current: any) =>
-        current !==
-        bid.reduce((highest: any, current: any) => {
-          return current.price > highest.price ? current : highest;
-        }, bid[0])
-    )
-    .reduce((secondHighest: any, current: any) => {
-      return current.price > secondHighest.price ? current : secondHighest;
-    }, bid[0]);
-  console.log(highestBid, secondHighestBid);
-  const HighestBidder = await prisma.user.findFirst({
-    where: {
-      id: userIdWithHighestPrice,
-    },
-    select: {
-      name: true,
-      photo: true,
-      id: true,
-    },
-  });
+  const { HighestBidder, HighestPrice, secondHighestBid } = await HighestBidderInfo(auctionId);
   return res.json({
     HighestBidder,
     HighestPrice,
-    secondHighestBid: secondHighestBid.userId,
+    secondHighestBid
   });
 });

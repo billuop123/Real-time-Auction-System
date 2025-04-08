@@ -87,26 +87,46 @@ export const ItemDetails = function () {
       axios
         .get(`http://localhost:3001/api/v1/khalti/callback?pidx=${pidx}`)
         .then((response) => {
-          console.log("Payment Verified:", response.data);
+          if (response.data.payment_status === "Completed") {
+            toast.success("Payment successful! Item has been sold.");
+            // Refresh item details to get updated status
+            itemDetails(id).then(updatedItem => {
+              setItem(updatedItem);
+            });
+          } else {
+            toast.error("Payment not completed. Please try again.");
+            setIsDisabled(false);
+          }
         })
         .catch((error) => {
           console.error("Error verifying payment:", error);
-        })
-        .finally(() => {
+          toast.error("Error verifying payment. Please try again.");
           setIsDisabled(false);
         });
     }
-  }, [pidx]);
-useEffect(()=>{
-  if(!userId) return;
-const isVerified=async()=>{
-  const response=await axios.post("http://localhost:3001/api/v1/user/isVerified",{userId})
-  if(!response.data.isVerified){
-    navigate("/resendverificationemail")
-  }
-}
-isVerified()
-},[userId])
+  }, [pidx, id]);
+
+  useEffect(() => {
+    if (item === null) return;
+    const deadlineDate = new Date(item.deadline);
+    const now = new Date();
+    const diff = deadlineDate.getTime() - now.getTime();
+    if (diff <= 0) {
+      setIsDisabled(true);
+    }
+  }, [item]);
+
+  useEffect(() => {
+    if (!userId) return;
+    const isVerified = async () => {
+      const response = await axios.post("http://localhost:3001/api/v1/user/isVerified", { userId });
+      if (!response.data.isVerified) {
+        navigate("/resendverificationemail");
+      }
+    };
+    isVerified();
+  }, [userId]);
+
   useEffect(() => {
     async function isLoggedIn() {
       const jwt = sessionStorage.getItem("jwt");
@@ -130,16 +150,6 @@ isVerified()
   }, [navigate]);
 
   useEffect(() => {
-    if (item === null) return;
-    const deadlineDate = new Date(item.deadline);
-    const now = new Date();
-    const diff = deadlineDate.getTime() - now.getTime();
-    if (diff <= 0) {
-      setIsDisabled(true);
-    }
-  }, [item]);
-
-  useEffect(() => {
     async function getDetails() {
       try {
         const item = await itemDetails(id);
@@ -150,7 +160,7 @@ isVerified()
         setHighestBidder(HighestBidder);
         setHighestPrice(Number(HighestPrice));
         setPreviousHighestBidder(Number(secondHighestBid));
-        setNoBids(HighestBidder==="no bids");
+        setNoBids(HighestBidder === "no bids");
       } catch (error) {
         console.error("Failed to fetch item or highest bidder details", error);
       }
@@ -329,43 +339,51 @@ isVerified()
     try {
       if (highestPrice) {
         if (numericBid > highestPrice) {
-          await addBid(numericBid, userId, id);
-          const { HighestBidder, HighestPrice, secondHighestBid } =
-            await HighestBidderInfo(id);
-          setHighestBidder(HighestBidder);
-          setHighestPrice(Number(HighestPrice));
-          setPreviousHighestBidder(Number(secondHighestBid));
+          const response = await addBid(numericBid, userId, id);
+          
+          // Update UI with the processed bid information
+          setHighestBidder(response.highestBidder);
+          setHighestPrice(Number(response.highestPrice));
+          setPreviousHighestBidder(Number(response.secondHighestBid));
           setNoBids(false);
           
-          if (secondHighestBid) {
-            await newNotification(secondHighestBid, id);
+          if (response.secondHighestBid) {
+            await newNotification(response.secondHighestBid, id);
           }
-          socket?.send(
-            JSON.stringify({
-              type: "new_bid",
-              auctionId: id,
-              price: numericBid,
-              previousHighestBidder: Number(highestBidder!.id),
-            })
-          );
+          
+          // Send WebSocket message to other clients
+          if (socket && isWebSocketConnected) {
+            socket.send(
+              JSON.stringify({
+                type: "new_bid",
+                auctionId: id,
+                price: numericBid,
+                previousHighestBidder: Number(highestBidder!.id),
+              })
+            );
+          }
           toast.success("Bid successfully placed!");
         } else {
           setBidError(`Bid must be higher than Rs ${highestPrice.toFixed(2)}`);
         }
       } else if (numericBid > item!.startingPrice) {
-        await addBid(numericBid, userId, id);
-        const { HighestBidder, HighestPrice } = await HighestBidderInfo(id);
-        setHighestBidder(HighestBidder);
-        setHighestPrice(Number(HighestPrice));
+        const response = await addBid(numericBid, userId, id);
+        
+        // Update UI with the processed bid information
+        setHighestBidder(response.highestBidder);
+        setHighestPrice(Number(response.highestPrice));
         setNoBids(false);
         
-        socket?.send(
-          JSON.stringify({
-            type: "new_bid",
-            auctionId: id,
-            price: numericBid,
-          })
-        );
+        // Send WebSocket message to other clients
+        if (socket && isWebSocketConnected) {
+          socket.send(
+            JSON.stringify({
+              type: "new_bid",
+              auctionId: id,
+              price: numericBid,
+            })
+          );
+        }
         toast.success("Bid successfully placed!");
       } else {
         setBidError(`Bid must be higher than Rs ${item!.startingPrice.toFixed(2)}`);
@@ -374,12 +392,11 @@ isVerified()
       console.error("Bid submission failed", error);
       setBidError("Failed to submit bid. Please try again.");
       toast.error("Failed to place bid.");
-    } finally {
-      setIsSubmittingBid(false);
-      if (!bidError) {
-        setShowBidInput(false);
-        setBidAmount("");
-      }
+    }
+    setIsSubmittingBid(false);
+    if (!bidError) {
+      setShowBidInput(false);
+      setBidAmount("");
     }
   };
 
@@ -532,7 +549,6 @@ isVerified()
                   onClick={submitBid}
                   disabled={
                     isOwner ||
-                    highestBidder?.id === Number(userId) ||
                     Number(bidAmount) <= highestPrice ||
                     Number(bidAmount) <= Number(item.startingPrice) ||
                     isDisabled ||
@@ -540,7 +556,7 @@ isVerified()
                     isSubmittingBid
                   }
                   className={`flex-1 py-3 rounded-lg transition ${
-                    bidError || !bidAmount || isOwner || isDisabled || highestBidder?.id === Number(userId) || isSubmittingBid
+                    bidError || !bidAmount || isOwner || isDisabled || isSubmittingBid
                       ? "bg-slate-200 text-slate-500 cursor-not-allowed"
                       : "bg-amber-500 text-white hover:bg-amber-600"
                   }`}
@@ -705,15 +721,15 @@ isVerified()
                   {/* Place Bid button */}
                   <button
                     className={`flex-1 py-4 rounded-xl flex items-center justify-center space-x-2 transition-colors shadow-sm 
-                    ${isOwner || highestBidder?.id === Number(userId) || isDisabled
+                    ${isOwner || isDisabled
                       ? "bg-slate-200 text-slate-500 cursor-not-allowed"
                       : "bg-amber-500 text-white hover:bg-amber-600 shadow-amber-200"
                     }`}
                     onClick={handlePlaceBid}
-                    disabled={isOwner || highestBidder?.id === Number(userId) || isDisabled}
+                    disabled={isOwner || isDisabled}
                   >
                     <FaHandHoldingUsd />
-                    <span>Place Bid</span>
+                    <span>{highestBidder?.id === Number(userId) ? "Extend Bid" : "Place Bid"}</span>
                   </button>
                   
                   {/* Buy Item button (for winners) */}

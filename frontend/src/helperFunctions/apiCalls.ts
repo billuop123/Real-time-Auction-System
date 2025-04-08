@@ -93,11 +93,12 @@ export const addBid = async function (
   userId: string,
   id: string | undefined
 ) {
-  await axios.post(`http://localhost:3001/api/v1/bid/addBid`, {
+  const response = await axios.post(`http://localhost:3001/api/v1/bid/addBid`, {
     bidAmount: numericBid,
     userId,
     auctionId: Number(id),
   });
+  return response.data;
 };
 export const newNotification = async function (
   secondHighestBid: string,

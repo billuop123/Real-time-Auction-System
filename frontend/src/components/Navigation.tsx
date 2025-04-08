@@ -9,6 +9,7 @@ import {
   FaUser,
   FaUserPlus,
   FaChevronDown,
+  FaGavel,
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
@@ -211,14 +212,7 @@ const Navbar: React.FC = () => {
               to="/"
               className="text-2xl font-bold text-amber-500 flex items-center space-x-2 hover:text-amber-400 transition"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-8 w-8"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M17.5 0h-11C4.673 0 3 1.673 3 3.5v17C3 22.327 4.673 24 6.5 24h11c1.827 0 3.5-1.673 3.5-3.5v-17C21 1.673 19.327 0 17.5 0zm-6 3h2v2h-2V3zm7 16.5c0 .827-.673 1.5-1.5 1.5h-11c-.827 0-1.5-.673-1.5-1.5v-17c0-.827.673-1.5 1.5-1.5H9v2.5c0 .276.224.5.5.5h5c.276 0 .5-.224.5-.5V2h2.5c.827 0 1.5.673 1.5 1.5v17z" />
-              </svg>
+              <FaGavel className="h-8 w-8" />
               <span className="tracking-wide">AuctionHub</span>
             </Link>
           </div>

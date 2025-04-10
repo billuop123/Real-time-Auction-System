@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.adminSignin = exports.isVerified = exports.resendVerificationEmail = exports.verifyEmail = exports.userSigninGoogle = exports.loggedIn = exports.login = exports.signup = void 0;
+exports.resetPassword = exports.resetPasswordEmail = exports.adminSignin = exports.isVerified = exports.resendVerificationEmail = exports.verifyEmail = exports.userSigninGoogle = exports.loggedIn = exports.login = exports.signup = void 0;
 const config_1 = require("../config");
 const prismaClient_1 = require("../prismaClient");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
@@ -262,3 +262,63 @@ const adminSignin = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.adminSignin = adminSignin;
+const resetPasswordEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email } = req.body;
+    try {
+        const user = yield prismaClient_1.prisma.user.findFirst({
+            where: { email }
+        });
+        if (!user) {
+            return res.status(400).json({
+                error: "User not found"
+            });
+        }
+        yield (0, mailer_1.sendEmail)({ email: user.email, emailType: "RESET", userId: user.id.toString() });
+        return res.json({
+            message: "Reset password email sent successfully"
+        });
+    }
+    catch (err) {
+        return res.status(500).json({
+            error: `Failed to reset password${err.message}`
+        });
+    }
+});
+exports.resetPasswordEmail = resetPasswordEmail;
+const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { token, newPassword } = req.body;
+    console.log(token, newPassword);
+    try {
+        const user = yield prismaClient_1.prisma.user.findFirst({
+            where: { resetPasswordToken: token }
+        });
+        console.log(user);
+        if (!user) {
+            return res.status(400).json({
+                error: "User not found"
+            });
+        }
+        if (Number(user.resetPasswordTokenExpiry) < Number(Date.now())) {
+            return res.status(400).json({
+                error: "Token expired"
+            });
+        }
+        yield prismaClient_1.prisma.user.update({
+            where: { id: user.id },
+            data: {
+                resetPasswordToken: null,
+                resetPasswordTokenExpiry: null,
+                password: yield bcryptjs_1.default.hash(newPassword, 15)
+            }
+        });
+        return res.json({
+            message: "Password reset successfully"
+        });
+    }
+    catch (err) {
+        return res.status(500).json({
+            error: `Failed to reset password${err.message}`
+        });
+    }
+});
+exports.resetPassword = resetPassword;

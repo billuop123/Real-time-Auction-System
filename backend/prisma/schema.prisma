@@ -17,13 +17,15 @@ model User {
   name              String
   email             String    @unique
   password          String?
-  photo             String?
+  photo             String? @default("https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y")
   verifiedToken     String?
   verifiedTokenExpiry DateTime?
   isVerified        Boolean   @default(false)
   role              String    @default("USER")
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+  resetPasswordToken String?
+  resetPasswordTokenExpiry DateTime?
   auctionItems      AuctionItems[]
   bids              Bids[]
   notifications     Notification[]

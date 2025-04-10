@@ -43,37 +43,38 @@ exports.adminRouter.get("/users", (req, res) => __awaiter(void 0, void 0, void 0
     }
 }));
 // Get user details with their auctions and bids
-exports.adminRouter.get("/users/:userId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.adminRouter.delete("/users/:userId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId } = req.params;
     try {
-        const user = yield prismaClient_1.prisma.user.findUnique({
+        const user = yield prismaClient_1.prisma.user.delete({
             where: { id: Number(userId) },
-            include: {
-                auctionItems: {
-                    select: {
-                        id: true,
-                        name: true,
-                        startingPrice: true,
-                        deadline: true,
-                        status: true,
-                        approvalStatus: true
-                    }
-                },
-                bids: {
-                    select: {
-                        id: true,
-                        price: true,
-                        auction: {
-                            select: {
-                                id: true,
-                                name: true,
-                                status: true
-                            }
-                        }
-                    }
-                }
-            }
+            //   include: {
+            //     auctionItems: {
+            //       select: {
+            //         id: true,
+            //         name: true,
+            //         startingPrice: true,
+            //         deadline: true,
+            //         status: true,
+            //         approvalStatus: true
+            //       }
+            //     },
+            //     bids: {
+            //       select: {
+            //         id: true,
+            //         price: true,
+            //         auction: {
+            //           select: {
+            //             id: true,
+            //             name: true,
+            //             status: true
+            //           }
+            //         }
+            //       }
+            //     }
+            //   }
         });
+        return res.json({ message: "User deleted successfully" });
         if (!user) {
             return res.status(404).json({ error: "User not found" });
         }

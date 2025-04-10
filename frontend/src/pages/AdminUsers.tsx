@@ -57,9 +57,9 @@ export const AdminUsers: React.FC = () => {
     }
   };
 
-  const handleUserClick = (userId: number) => {
-    navigate(`/admin/users/${userId}`);
-  };
+  // const handleUserClick = (userId: number) => {
+  //   navigate(`/admin/users/${userId}`);
+  // };
 
   const handleDeleteClick = (e: React.MouseEvent, user: User) => {
     e.stopPropagation();
@@ -108,7 +108,7 @@ export const AdminUsers: React.FC = () => {
               <TableRow 
                 key={user.id}
                 className="cursor-pointer hover:bg-slate-50"
-                onClick={() => handleUserClick(user.id)}
+                // onClick={() => handleUserClick(user.id)}
               >
                 <TableCell>
                   <div className="flex items-center space-x-2">

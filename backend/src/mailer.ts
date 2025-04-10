@@ -20,24 +20,29 @@ export const sendEmail = async (options: EmailOptions) => {
     console.log("📨 Sending email to:", options.email);
     const hashedToken = await bcrypt.hash(options.userId.toString(), 10);
 
-    if (options.emailType === "VERIFY" || options.emailType === "RESET") {
+    if (options.emailType === "VERIFY") {
       // Update user record based on email type
       const updateData: any = {
         verifiedToken: hashedToken,
         verifiedTokenExpiry: new Date(Date.now() + 36000000), 
       };
 
-      if (options.emailType === "RESET") {
-        updateData.resetToken = hashedToken;
-        updateData.resetTokenExpiry = new Date(Date.now() + 36000000);
-      }
 
       await prisma.user.update({
         where: { id: Number(options.userId) },
         data: updateData,
       });
     }
-
+    if(options.emailType==="RESET"){
+      const updateData: any = {
+        resetPasswordToken: hashedToken,
+        resetPasswordTokenExpiry: new Date(Date.now() + 36000000), 
+      };
+      await prisma.user.update({
+        where: { id: Number(options.userId) },
+        data: updateData,
+      });
+    }
     // Configure Gmail SMTP Transport
     const transport = nodemailer.createTransport({
       host: process.env.SMTP_HOST,

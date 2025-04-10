@@ -29,38 +29,38 @@ adminRouter.get("/users", async (req: any, res: any) => {
 });
 
 // Get user details with their auctions and bids
-adminRouter.get("/users/:userId", async (req: any, res: any) => {
+adminRouter.delete("/users/:userId", async (req: any, res: any) => {
   const { userId } = req.params;
   try {
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.delete({
       where: { id: Number(userId) },
-      include: {
-        auctionItems: {
-          select: {
-            id: true,
-            name: true,
-            startingPrice: true,
-            deadline: true,
-            status: true,
-            approvalStatus: true
-          }
-        },
-        bids: {
-          select: {
-            id: true,
-            price: true,
-            auction: {
-              select: {
-                id: true,
-                name: true,
-                status: true
-              }
-            }
-          }
-        }
-      }
+    //   include: {
+    //     auctionItems: {
+    //       select: {
+    //         id: true,
+    //         name: true,
+    //         startingPrice: true,
+    //         deadline: true,
+    //         status: true,
+    //         approvalStatus: true
+    //       }
+    //     },
+    //     bids: {
+    //       select: {
+    //         id: true,
+    //         price: true,
+    //         auction: {
+    //           select: {
+    //             id: true,
+    //             name: true,
+    //             status: true
+    //           }
+    //         }
+    //       }
+    //     }
+    //   }
     });
-
+    return res.json({message:"User deleted successfully"})
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }

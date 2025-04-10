@@ -42,11 +42,7 @@ export const Home = function () {
   };
   
   // Handle filter application
-  const applyFilters = () => {
-    // This would typically trigger a fetch with the filters
-    console.log("Applying filters:", filters);
-    // For now we're just filtering client-side
-  };
+
   
   // Handle category quick link click
   const handleCategoryClick = (categoryValue:any) => {
@@ -328,7 +324,7 @@ export const Home = function () {
                   ))}
                 </select>
               </div>
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Item Condition</label>
                 <select 
                   name="condition"
@@ -342,16 +338,9 @@ export const Home = function () {
                   <option value="good">Good</option>
                   <option value="fair">Fair</option>
                 </select>
-              </div>
+              </div> */}
             </div>
-            <div className="flex justify-end mt-4">
-              <button 
-                onClick={applyFilters}
-                className="bg-slate-800 text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-slate-700 transition"
-              >
-                Apply Filters
-              </button>
-            </div>
+           
           </div>
         )}
         

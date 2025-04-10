@@ -253,3 +253,62 @@ export const adminSignin = async (req: any, res: any) => {
     });
   }
 };
+export const resetPasswordEmail=async(req:any,res:any)=>{
+  const {email}=req.body
+  try{
+    const user=await prisma.user.findFirst({
+      where:{email}
+    })
+    if(!user){
+      return res.status(400).json({
+        error:"User not found"
+      })
+    }
+    await sendEmail({email:user.email,emailType:"RESET",userId:user.id.toString()})
+    return res.json({
+      message:"Reset password email sent successfully"
+    })
+  }
+  catch(err:any){
+    return res.status(500).json({
+      error:`Failed to reset password${err.message}`
+    })
+  }
+
+}
+export const resetPassword=async(req:any,res:any)=>{
+  const {token,newPassword}=req.body
+  console.log(token,newPassword)
+  try{
+    const user=await prisma.user.findFirst({
+      where:{resetPasswordToken:token}
+    })
+    console.log(user)
+    if(!user){
+      return res.status(400).json({
+        error:"User not found"
+      })
+    }
+    if(Number(user.resetPasswordTokenExpiry) < Number(Date.now())){
+      return res.status(400).json({
+        error:"Token expired"
+      })
+    }
+    await prisma.user.update({
+      where:{id:user.id},
+      data:{
+        resetPasswordToken:null,
+        resetPasswordTokenExpiry:null,
+        password:await bcrypt.hash(newPassword,15)
+      }
+    })
+    return res.json({
+      message:"Password reset successfully"
+    })
+  } 
+  catch(err:any){
+    return res.status(500).json({
+      error:`Failed to reset password${err.message}`
+    })
+  }
+}

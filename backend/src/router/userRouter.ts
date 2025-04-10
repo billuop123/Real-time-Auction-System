@@ -1,5 +1,5 @@
 import express from "express";
-import { isVerified, loggedIn, login, resendVerificationEmail, signup, userSigninGoogle, verifyEmail, adminSignin } from "../controller/authController";
+import { isVerified, loggedIn, login, resendVerificationEmail, signup, userSigninGoogle, verifyEmail, adminSignin, resetPassword, resetPasswordEmail } from "../controller/authController";
 import { cloudinarySetup } from "../controller/cloudinaryController";
 import {
   getUserInfo,
@@ -27,7 +27,8 @@ userRouter.post(
 );
 userRouter.post("/user-items", userItem);
 userRouter.post("/googlesignin",userSigninGoogle)
-
+userRouter.post("/reset-passwordemail",resetPasswordEmail)
+userRouter.post("/reset-password",resetPassword)
 // Get user's items
 userRouter.get("/items/:userId", async (req: any, res: any) => {
   const { userId } = req.params;

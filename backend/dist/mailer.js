@@ -22,16 +22,22 @@ const sendEmail = (options) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         console.log("📨 Sending email to:", options.email);
         const hashedToken = yield bcryptjs_1.default.hash(options.userId.toString(), 10);
-        if (options.emailType === "VERIFY" || options.emailType === "RESET") {
+        if (options.emailType === "VERIFY") {
             // Update user record based on email type
             const updateData = {
                 verifiedToken: hashedToken,
                 verifiedTokenExpiry: new Date(Date.now() + 36000000),
             };
-            if (options.emailType === "RESET") {
-                updateData.resetToken = hashedToken;
-                updateData.resetTokenExpiry = new Date(Date.now() + 36000000);
-            }
+            yield prismaClient_1.prisma.user.update({
+                where: { id: Number(options.userId) },
+                data: updateData,
+            });
+        }
+        if (options.emailType === "RESET") {
+            const updateData = {
+                resetPasswordToken: hashedToken,
+                resetPasswordTokenExpiry: new Date(Date.now() + 36000000),
+            };
             yield prismaClient_1.prisma.user.update({
                 where: { id: Number(options.userId) },
                 data: updateData,

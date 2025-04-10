@@ -14,6 +14,8 @@ import { ResendVerificationEmail } from "./pages/ResendVerificationEmail";
 import AdminUsers from './pages/AdminUsers';
 import AdminUserDetails from './pages/AdminUserDetails';
 import { AdminRoute } from './components/AdminRoute';
+import ResetPasswordEmail from "./pages/ResetPasswordEmail";
+import ResetPassword from "./pages/ResetPassword";
 const Home = lazy(() => import("./pages/Home"));
 const ItemDetails = lazy(() => import("./pages/ItemDetails"));
 const SigninPage = lazy(() => import("./pages/Signin"));
@@ -44,7 +46,8 @@ function App() {
                 <Route path="verifyemail" element={<VerifyEmail/>}/>
                 <Route path="resendverificationemail" element={<ResendVerificationEmail/>}/>
                 <Route path="/admin/signin" element={<AdminSignin />} />
-                
+                <Route path="/reset-password" element={<ResetPasswordEmail/>}/>
+                <Route path="/resetpassword" element={<ResetPassword/>}/>
                 {/* Protected Admin Routes */}
                 <Route path="/admin/dashboard" element={
                   <AdminRoute>
@@ -56,11 +59,11 @@ function App() {
                     <AdminUsers />
                   </AdminRoute>
                 } />
-                <Route path="/admin/users/:userId" element={
+                {/* <Route path="/admin/users/:userId" element={
                   <AdminRoute>
                     <AdminUserDetails />
                   </AdminRoute>
-                } />
+                } /> */}
               </Routes>
             </SearchProvider>
           </AuthProvider>

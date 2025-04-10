@@ -32,6 +32,8 @@ exports.userRouter.post("/admin/signin", authController_1.adminSignin);
 exports.userRouter.post("/updateProfilePicture", upload.single("profilePicture"), userController_1.updateProfilePicture);
 exports.userRouter.post("/user-items", userController_1.userItem);
 exports.userRouter.post("/googlesignin", authController_1.userSigninGoogle);
+exports.userRouter.post("/reset-passwordemail", authController_1.resetPasswordEmail);
+exports.userRouter.post("/reset-password", authController_1.resetPassword);
 // Get user's items
 exports.userRouter.get("/items/:userId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId } = req.params;

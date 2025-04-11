@@ -29,7 +29,6 @@ userRouter.post("/user-items", userItem);
 userRouter.post("/googlesignin",userSigninGoogle)
 userRouter.post("/reset-passwordemail",resetPasswordEmail)
 userRouter.post("/reset-password",resetPassword)
-// Get user's items
 userRouter.get("/items/:userId", async (req: any, res: any) => {
   const { userId } = req.params;
   try {

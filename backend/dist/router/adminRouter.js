@@ -16,7 +16,6 @@ exports.adminRouter = void 0;
 const express_1 = __importDefault(require("express"));
 const prismaClient_1 = require("../prismaClient");
 exports.adminRouter = (0, express_1.default)();
-// Get all users
 exports.adminRouter.get("/users", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const users = yield prismaClient_1.prisma.user.findMany({
@@ -42,7 +41,6 @@ exports.adminRouter.get("/users", (req, res) => __awaiter(void 0, void 0, void 0
         return res.status(500).json({ error: "Error fetching users" });
     }
 }));
-// Get user details with their auctions and bids
 exports.adminRouter.delete("/users/:userId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId } = req.params;
     try {
@@ -211,7 +209,7 @@ exports.adminRouter.post("/items/:itemId/resubmit", (req, res) => __awaiter(void
             },
             data: {
                 approvalStatus: "PENDING",
-                deadline: deadline // The date is already in ISO format from frontend
+                deadline: deadline
             }
         });
         return res.json({

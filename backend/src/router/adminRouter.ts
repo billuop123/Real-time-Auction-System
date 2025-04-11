@@ -2,7 +2,6 @@ import express from "express";
 import { prisma } from "../prismaClient";
 export const adminRouter = express();
 
-// Get all users
 adminRouter.get("/users", async (req: any, res: any) => {
   try {
     const users = await prisma.user.findMany({
@@ -28,7 +27,7 @@ adminRouter.get("/users", async (req: any, res: any) => {
   }
 });
 
-// Get user details with their auctions and bids
+
 adminRouter.delete("/users/:userId", async (req: any, res: any) => {
   const { userId } = req.params;
   try {
@@ -198,7 +197,7 @@ adminRouter.post("/items/:itemId/resubmit", async (req: any, res: any) => {
             },
             data: {
                 approvalStatus: "PENDING",
-                deadline: deadline // The date is already in ISO format from frontend
+                deadline: deadline 
             }
         });
         return res.json({

@@ -34,7 +34,7 @@ model AuctionItems {
   id           Int           @id @default(autoincrement())
   startingPrice Int
   name         String 
-  description  String
+  description  String?
   deadline     DateTime
   bids         Bids[]
   photo        String
@@ -42,7 +42,7 @@ model AuctionItems {
   status       Status @default(PENDING)
   approvalStatus ApprovalStatus @default(PENDING)
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category     Category
+  category     Category @default(OTHERS)
   featured     Boolean @default(false)
   notification Notification[]
 }

@@ -45,7 +45,7 @@ export const AuctionItem: React.FC = () => {
       setIsLoading(true);
       const response = await addItems(formDataToSend, token);
       navigate("/");
-      toast.success("Item successfully added");
+      toast.success("Item successfully added,please wait for admins approval");
     } catch (error) {
       console.error("Error uploading item:", error);
       toast.error("Failed to upload item");

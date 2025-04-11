@@ -163,7 +163,7 @@ export const Home = function () {
           </svg>
         </div>
         
-        <div className="container mx-auto px-4 relative z-10">
+        <div className="container mx-auto px-4 relative z-10 mt-16">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
               Bid, Win, Celebrate on AuctionHub
@@ -246,9 +246,9 @@ export const Home = function () {
       
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 md:mb-12">
           <div className="flex items-center space-x-4 mb-4 md:mb-0">
-            <span className="inline-flex items-center px-4 py-2 rounded-full bg-slate-800 text-white text-sm font-medium">
+            {/* <span className="inline-flex items-center px-4 py-2 rounded-full bg-slate-800 text-white text-sm font-medium">
               <FaClock className="mr-2" /> {sortedItems.length} Active Auctions
-            </span>
+            </span> */}
             {expiringSoonItems.length > 0 && (
               <span className="inline-flex items-center px-4 py-2 rounded-full bg-amber-500 text-white text-sm font-medium">
                 <FaFire className="mr-2" /> {expiringSoonItems.length} Ending Soon
@@ -312,7 +312,7 @@ export const Home = function () {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Categories</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1 w-full">Categories</label>
                 <select 
                   name="category"
                   value={filters.category}
@@ -323,7 +323,7 @@ export const Home = function () {
                     <option key={category.value} value={category.value}>{category.label}</option>
                   ))}
                 </select>
-              </div>
+                 </div>
               {/* <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Item Condition</label>
                 <select 
@@ -339,7 +339,7 @@ export const Home = function () {
                   <option value="fair">Fair</option>
                 </select>
               </div> */}
-            </div>
+          </div>
            
           </div>
         )}

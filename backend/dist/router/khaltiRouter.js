@@ -62,8 +62,6 @@ exports.khaltiRouter.get("/callback", (req, res) => __awaiter(void 0, void 0, vo
     try {
         const response = yield axios_1.default.post("https://a.khalti.com/api/v2/epayment/lookup/", { pidx }, { headers });
         const paymentStatus = response.data.status;
-        console.log("---------------------");
-        console.log(paymentStatus);
         if (paymentStatus === "Completed") {
             // ✅ Fetch auctionId from the database using `pidx`
             const paymentRecord = yield prismaClient_1.prisma.payment.findUnique({

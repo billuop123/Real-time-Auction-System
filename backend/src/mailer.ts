@@ -17,7 +17,7 @@ interface EmailOptions {
 
 export const sendEmail = async (options: EmailOptions) => {
   try {
-    console.log("📨 Sending email to:", options.email);
+ 
     const hashedToken = await bcrypt.hash(options.userId.toString(), 10);
 
     if (options.emailType === "VERIFY") {
@@ -98,7 +98,7 @@ export const sendEmail = async (options: EmailOptions) => {
 
     // Send Email
     const mailResponse = await transport.sendMail(mailOptions);
-    console.log("✅ Email sent successfully:", mailResponse.messageId);
+   
     return mailResponse;
   } catch (error: any) {
     console.error("❌ Error sending email:", error.message);

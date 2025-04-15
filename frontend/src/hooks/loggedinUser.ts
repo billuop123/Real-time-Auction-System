@@ -8,7 +8,6 @@ interface DecodedToken {
 export function  useInfo() {
   const [userId, setUserId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
-  console.log(userId)
   useEffect(() => {
     const jwt = sessionStorage.getItem("jwt");
     if (jwt) {

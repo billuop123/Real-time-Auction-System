@@ -35,7 +35,7 @@ notificationRouter.get("/:id", async (req: any, res: any) => {
     },
   
   });
-  console.log(notifications);
+
   return res.json({
     notifications,
   });

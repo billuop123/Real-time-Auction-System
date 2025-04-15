@@ -64,8 +64,7 @@ khaltiRouter.get("/callback", async (req: any, res: any) => {
     );
   
     const paymentStatus = response.data.status;
-    console.log("---------------------");
-    console.log(paymentStatus);
+    
 
     if (paymentStatus === "Completed") {
       // ✅ Fetch auctionId from the database using `pidx`

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
-import { FaEnvelope, FaLock, FaSignInAlt, FaUser } from "react-icons/fa";
+import { FaEnvelope, FaLock, FaSignInAlt, FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { signin } from "@/helperFunctions/apiCalls";
@@ -8,6 +8,7 @@ import { useAuth } from "@/Contexts/AuthContext";
 
 export const SigninPage: React.FC = () => {
   const [isLogging, setIsLogging] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { email, setEmail, password, setPassword } = useAuth();
   const [validationErrors, setValidationErrors] = useState<{
@@ -100,17 +101,24 @@ export const SigninPage: React.FC = () => {
             <div className="relative">
               <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-500" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+                className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
                   validationErrors.password
                     ? "border-red-500 focus:ring-red-500"
                     : "border-slate-200 focus:ring-amber-500"
                 }`}
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-500 hover:text-amber-600"
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
               {validationErrors.password && (
                 <p className="text-red-500 text-sm mt-1">{validationErrors.password}</p>
               )}

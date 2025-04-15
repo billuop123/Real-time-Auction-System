@@ -102,8 +102,10 @@ export const addBid = async function (
 };
 export const newNotification = async function (
   secondHighestBid: string,
-  id: string | undefined
+  id: String | undefined
 ) {
+ 
+  if(secondHighestBid.toString()==id?.toString()) return;
   await axios.post(
     `http://localhost:3001/api/v1/notification/new-notification`,
     { userId: secondHighestBid, auctionId: Number(id) }

@@ -46,7 +46,6 @@ exports.notificationRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, v
             },
         },
     });
-    console.log(notifications);
     return res.json({
         notifications,
     });

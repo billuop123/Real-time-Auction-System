@@ -21,7 +21,6 @@ export function Notification({ notifications }: any) {
   const [safeNotifications, setSafeNotifications] = useState<
     NotificationType[]
   >([]);
-  console.log(notifications);
   const userId = useInfo();
   useEffect(() => {
     if (Array.isArray(notifications) && notifications.length > 0) {

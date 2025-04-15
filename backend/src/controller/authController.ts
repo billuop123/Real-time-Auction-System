@@ -103,7 +103,7 @@ export const loggedIn = async (req: any, res: any) => {
 };
 export const userSigninGoogle=async(req:any,res:any)=>{
   const {photo,name,email}=req.body
-  console.log("recieved")
+
   try{
     const {id}=await prisma.user.create({
       data:{
@@ -120,7 +120,7 @@ export const userSigninGoogle=async(req:any,res:any)=>{
       token
     })
   }catch(err:any){
-    console.log(err)
+
     return res.json({
       error:`Failed to signin with google${err.message}`
     })
@@ -129,7 +129,7 @@ export const userSigninGoogle=async(req:any,res:any)=>{
 }
 export const verifyEmail=async(req:any,res:any)=>{
   const {token}=req.body
-  console.log(token)
+
   try{
     const user=await prisma.user.findFirst({
       where:{
@@ -278,12 +278,12 @@ export const resetPasswordEmail=async(req:any,res:any)=>{
 }
 export const resetPassword=async(req:any,res:any)=>{
   const {token,newPassword}=req.body
-  console.log(token,newPassword)
+
   try{
     const user=await prisma.user.findFirst({
       where:{resetPasswordToken:token}
     })
-    console.log(user)
+
     if(!user){
       return res.status(400).json({
         error:"User not found"

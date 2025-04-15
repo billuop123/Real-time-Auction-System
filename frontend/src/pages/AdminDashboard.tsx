@@ -154,7 +154,7 @@ export const AdminDashboard: React.FC = () => {
       }
 
       const newFeaturedStatus = !item.featured
-      console.log(`Setting item ${itemId} featured status to: ${newFeaturedStatus}`)
+   
       
       // Make API call with explicit status value
       const response = await axios.post(`http://localhost:3001/api/v1/admin/featured/${itemId}`, {
@@ -169,7 +169,7 @@ export const AdminDashboard: React.FC = () => {
             ? { ...prevItem, featured: newFeaturedStatus } 
             : prevItem
         ))
-        console.log(`Successfully updated item ${itemId} featured status to: ${newFeaturedStatus}`)
+       
       } else {
         console.error('Server returned non-200 status', response)
         alert("Failed to update featured status")

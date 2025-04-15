@@ -20,7 +20,6 @@ const prismaClient_1 = require("./prismaClient");
 dotenv_1.default.config(); // Load environment variables
 const sendEmail = (options) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log("📨 Sending email to:", options.email);
         const hashedToken = yield bcryptjs_1.default.hash(options.userId.toString(), 10);
         if (options.emailType === "VERIFY") {
             // Update user record based on email type
@@ -94,7 +93,6 @@ const sendEmail = (options) => __awaiter(void 0, void 0, void 0, function* () {
         };
         // Send Email
         const mailResponse = yield transport.sendMail(mailOptions);
-        console.log("✅ Email sent successfully:", mailResponse.messageId);
         return mailResponse;
     }
     catch (error) {

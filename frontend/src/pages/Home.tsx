@@ -4,7 +4,7 @@ import { useSearch, Item } from "@/Contexts/SearchItemContext";
 import { getItems } from "@/helperFunctions/apiCalls";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { FaBoxOpen, FaFire, FaClock, FaPlus, FaSort, FaStar, FaBell, FaFilter } from "react-icons/fa";
+import { FaBoxOpen, FaFire, FaClock, FaPlus, FaSort, FaStar, FaBell, FaFilter, FaTimes, FaChevronDown } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 export const Home = function () {
@@ -28,11 +28,14 @@ export const Home = function () {
   ];
   
   // Filter state
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    minPrice: string;
+    maxPrice: string;
+    category: string;
+  }>({
     minPrice: "",
     maxPrice: "",
     category: "",
-    condition: ""
   });
   
   // Handle filter changes
@@ -52,10 +55,10 @@ export const Home = function () {
   
   // Filter for approved items first
   const approvedItems = allItems.filter(item => {
-    console.log("Checking approval status for item:", item.id, "Status:", item.approvalStatus);
+   
     return item.approvalStatus === "APPROVED";
   });
-  console.log("Approved items count:", approvedItems.length, "Items:", approvedItems);
+
 
   // Filter items that are either active or expired within 60 days
   const validItems = approvedItems.filter(item => {
@@ -67,32 +70,32 @@ export const Home = function () {
     const isActive = deadline > now;
     const isRecentlyExpired = deadline <= now && (now - deadline) <= sixtyDaysInMs;
     
-    console.log("Item:", item.id, "Deadline:", new Date(deadline), "Is active:", isActive, "Is recently expired:", isRecentlyExpired);
+
     return isActive || isRecentlyExpired;
   });
-  console.log("Valid items count:", validItems.length, "Items:", validItems);
+
 
   // Apply client-side filters
   const filteredItems = validItems.filter(item => {
     // Filter by price range
     if (filters.minPrice && item.startingPrice < parseFloat(filters.minPrice)) {
-      console.log("Item filtered out by min price:", item.id);
+ 
       return false;
     }
     if (filters.maxPrice && item.startingPrice > parseFloat(filters.maxPrice)) {
-      console.log("Item filtered out by max price:", item.id);
+      
       return false;
     }
     
     // Filter by category
     if (filters.category && item.category !== filters.category.toUpperCase()) {
-      console.log("Item filtered out by category:", item.id, "Item category:", item.category, "Filter category:", filters.category.toUpperCase());
+    
       return false;
     }
     
     return true;
   });
-  console.log("Final filtered items count:", filteredItems.length, "Items:", filteredItems);
+ 
 
   // Sort items based on selected option
   const sortedItems = [...filteredItems].sort((a, b) => {
@@ -127,7 +130,7 @@ export const Home = function () {
       try {
         setIsLoading(true);
         const response = await getItems();
-        console.log("Raw items from API:", response.data.allItems);
+    
         setItems(response.data.allItems);
       } catch (error) {
         console.error("Error fetching items:", error);
@@ -287,60 +290,69 @@ export const Home = function () {
         
         {/* Filters Panel - Now with working functionality */}
         {showFilters && (
-          <div className="bg-white p-4 rounded-lg shadow-md mb-8 border border-slate-200">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Price Range</label>
-                <div className="flex items-center space-x-2">
-                  <input 
-                    type="number" 
-                    name="minPrice"
-                    value={filters.minPrice}
-                    onChange={handleFilterChange}
-                    placeholder="Min" 
-                    className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" 
-                  />
-                  <span className="text-slate-500">-</span>
-                  <input 
-                    type="number" 
-                    name="maxPrice"
-                    value={filters.maxPrice}
-                    onChange={handleFilterChange}
-                    placeholder="Max" 
-                    className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" 
-                  />
+          <div className="bg-white p-6 rounded-xl shadow-lg mb-8 border border-slate-200">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-slate-800">Filter Options</h3>
+              <button
+                onClick={() => {
+                  setFilters({ minPrice: "", maxPrice: "", category: "" });
+                  setShowFilters(false);
+                }}
+                className="text-sm text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1"
+              >
+                <FaTimes className="text-xs" />
+                Clear All Filters
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700">Price Range</label>
+                <div className="flex items-center space-x-3">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">₹</span>
+                    <input 
+                      type="number" 
+                      name="minPrice"
+                      value={filters.minPrice}
+                      onChange={handleFilterChange}
+                      placeholder="Min" 
+                      className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm" 
+                    />
+                  </div>
+                  <span className="text-slate-400">to</span>
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">₹</span>
+                    <input 
+                      type="number" 
+                      name="maxPrice"
+                      value={filters.maxPrice}
+                      onChange={handleFilterChange}
+                      placeholder="Max" 
+                      className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm" 
+                    />
+                  </div>
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1 w-full">Categories</label>
-                <select 
-                  name="category"
-                  value={filters.category}
-                  onChange={handleFilterChange}
-                  className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"
-                >
-                  {categories.map(category => (
-                    <option key={category.value} value={category.value}>{category.label}</option>
-                  ))}
-                </select>
-                 </div>
-              {/* <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Item Condition</label>
-                <select 
-                  name="condition"
-                  value={filters.condition}
-                  onChange={handleFilterChange}
-                  className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"
-                >
-                  <option value="">Any Condition</option>
-                  <option value="new">New</option>
-                  <option value="like-new">Like New</option>
-                  <option value="good">Good</option>
-                  <option value="fair">Fair</option>
-                </select>
-              </div> */}
-          </div>
-           
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700">Categories</label>
+                <div className="relative">
+                  <select 
+                    name="category"
+                    value={filters.category}
+                    onChange={handleFilterChange}
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent appearance-none bg-white"
+                  >
+                    <option value="">All Categories</option>
+                    {categories.map(category => (
+                      <option key={category.value} value={category.value}>{category.label}</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <FaChevronDown className="text-slate-400 text-xs" />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
         

@@ -112,7 +112,6 @@ const loggedIn = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.loggedIn = loggedIn;
 const userSigninGoogle = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { photo, name, email } = req.body;
-    console.log("recieved");
     try {
         const { id } = yield prismaClient_1.prisma.user.create({
             data: {
@@ -129,7 +128,6 @@ const userSigninGoogle = (req, res) => __awaiter(void 0, void 0, void 0, functio
         });
     }
     catch (err) {
-        console.log(err);
         return res.json({
             error: `Failed to signin with google${err.message}`
         });
@@ -138,7 +136,6 @@ const userSigninGoogle = (req, res) => __awaiter(void 0, void 0, void 0, functio
 exports.userSigninGoogle = userSigninGoogle;
 const verifyEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { token } = req.body;
-    console.log(token);
     try {
         const user = yield prismaClient_1.prisma.user.findFirst({
             where: {
@@ -287,12 +284,10 @@ const resetPasswordEmail = (req, res) => __awaiter(void 0, void 0, void 0, funct
 exports.resetPasswordEmail = resetPasswordEmail;
 const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { token, newPassword } = req.body;
-    console.log(token, newPassword);
     try {
         const user = yield prismaClient_1.prisma.user.findFirst({
             where: { resetPasswordToken: token }
         });
-        console.log(user);
         if (!user) {
             return res.status(400).json({
                 error: "User not found"

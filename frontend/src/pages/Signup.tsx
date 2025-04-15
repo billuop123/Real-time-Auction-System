@@ -9,6 +9,8 @@ import {
   FaImage,
   FaSignInAlt,
   FaUserPlus,
+  FaEye,
+  FaEyeSlash,
 } from "react-icons/fa";
 import { signup } from "@/helperFunctions/apiCalls";
 import toast from "react-hot-toast";
@@ -24,6 +26,8 @@ export const SignupPage: React.FC = () => {
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string;
   }>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -190,17 +194,24 @@ export const SignupPage: React.FC = () => {
             <div className="relative">
               <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-500" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+                className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
                   validationErrors.password
                     ? "border-red-500 focus:ring-red-500"
                     : "border-slate-200 focus:ring-amber-500"
                 }`}
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-500 hover:text-amber-600"
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
               {validationErrors.password && (
                 <p className="text-red-500 text-sm mt-1">{validationErrors.password}</p>
               )}
@@ -210,17 +221,24 @@ export const SignupPage: React.FC = () => {
             <div className="relative">
               <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-500" />
               <input
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirm Password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+                className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
                   validationErrors.confirmPassword
                     ? "border-red-500 focus:ring-red-500"
                     : "border-slate-200 focus:ring-amber-500"
                 }`}
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-500 hover:text-amber-600"
+              >
+                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
               {validationErrors.confirmPassword && (
                 <p className="text-red-500 text-sm mt-1">{validationErrors.confirmPassword}</p>
               )}

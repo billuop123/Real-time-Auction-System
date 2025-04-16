@@ -73,9 +73,6 @@ exports.adminRouter.delete("/users/:userId", (req, res) => __awaiter(void 0, voi
             //   }
         });
         return res.json({ message: "User deleted successfully" });
-        if (!user) {
-            return res.status(404).json({ error: "User not found" });
-        }
         return res.json({ user });
     }
     catch (error) {

@@ -60,17 +60,16 @@ export const Home = function () {
   });
 
 
-  // Filter items that are either active or expired within 60 days
+  // Filter items that are either active or expired within 7 days
   const validItems = approvedItems.filter(item => {
     const deadline = new Date(item.deadline).getTime();
     const now = new Date().getTime();
-    const sixtyDaysInMs = 60 * 24 * 60 * 60 * 1000;
+    const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
     
-    // Item is either active (deadline in future) or expired within 60 days
+    // Item is either active (deadline in future) or expired within 7 days
     const isActive = deadline > now;
-    const isRecentlyExpired = deadline <= now && (now - deadline) <= sixtyDaysInMs;
+    const isRecentlyExpired = deadline <= now && (now - deadline) <= sevenDaysInMs;
     
-
     return isActive || isRecentlyExpired;
   });
 

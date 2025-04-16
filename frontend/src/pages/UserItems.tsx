@@ -154,7 +154,7 @@ export const UserItems = () => {
                     View Details
                   </Link>
 
-                  {item.approvalStatus === "DISAPPROVED" && (
+                  {(item.approvalStatus === "DISAPPROVED" || (item.status === "ACTIVE" && new Date(item.deadline) < new Date())) && (
                     <button
                       onClick={() => {
                         setSelectedItem(item);

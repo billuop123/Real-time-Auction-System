@@ -616,7 +616,7 @@ export const ItemDetails = function () {
                 <div className="absolute left-0 bottom-0 w-full bg-black/70 text-white p-4 flex items-center justify-center space-x-2">
                   <FaTrophy className="text-yellow-400" />
                   <span className="font-medium">
-                    {isWinner ? "You won this auction!" : `${highestBidder.name} won this auction`}
+                    {isWinner ? "You won this auction!" : noBids ? "Auction ended with no bids" : `${highestBidder.name} won this auction`}
                   </span>
                 </div>
               )}

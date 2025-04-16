@@ -9,13 +9,12 @@ export function cloudinarySetup() {
     api_secret: process.env.CLOUDINARY_API_SECRET,
   });
 
-  // Multer Cloudinary Storage
   const storage = new CloudinaryStorage({
     cloudinary,
     params: {
-      folder: "my-folder", // Specify the Cloudinary folder
-      format: async () => "png", // Optional: specify format
-    } as any, // Casting to 'any' to resolve the type error
+      folder: "my-folder", 
+      format: async () => "png", 
+    } as any, 
   });
   const upload = multer({ storage });
   return upload;

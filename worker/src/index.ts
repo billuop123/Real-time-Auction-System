@@ -68,14 +68,14 @@ const run = async () => {
               });
 
               // Create notification for the winner
-              await prisma.notification.create({
+              const winner=await prisma.notification.create({
                 data: {
                   userId: highestBid.userId,
                   auctionId,
                   message: `Congratulations! You won the auction for Rs ${highestBid.price} for item ${auction.name}. Please complete the payment to claim your item.`
                 }
               });
-
+              console.log(winner);
               console.log(`Auction ${auctionId} ended. Winner: ${highestBid.user.name}`);
             } else {
               // No bids, mark as UNSOLD

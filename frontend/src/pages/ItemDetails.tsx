@@ -80,6 +80,7 @@ export const ItemDetails = function () {
   const [contactError, setContactError] = useState("");
   const [showResubmitModal, setShowResubmitModal] = useState(false);
   const [isResubmitting, setIsResubmitting] = useState(false);
+  const MAX_BID_PERCENTAGE = 1.5; // 50% above current price
 
   useEffect(() => {
     if (pidx) {
@@ -280,7 +281,13 @@ export const ItemDetails = function () {
     setBidAmount(value);
 
     const numericBid = Number(value);
-    if (highestPrice) {
+    const maxBid = highestPrice 
+      ? highestPrice * MAX_BID_PERCENTAGE 
+      : item!.startingPrice * MAX_BID_PERCENTAGE;
+
+    if (numericBid > maxBid) {
+      setBidError(`Bid cannot exceed Rs ${maxBid.toFixed(2)}`);
+    } else if (highestPrice) {
       if (numericBid <= highestPrice) {
         setBidError(`Bid must be higher than Rs ${highestPrice.toFixed(2)}`);
       } else {
@@ -288,9 +295,7 @@ export const ItemDetails = function () {
       }
     } else {
       if (numericBid <= item!.startingPrice) {
-        setBidError(
-          `Bid must be higher than Rs ${item!.startingPrice.toFixed(2)}`
-        );
+        setBidError(`Bid must be higher than Rs ${item!.startingPrice.toFixed(2)}`);
       } else {
         setBidError("");
       }
@@ -534,6 +539,10 @@ export const ItemDetails = function () {
                     highestPrice
                       ? (highestPrice + 1).toFixed(2)
                       : (item.startingPrice + 1).toFixed(2)
+                  }, Max: Rs ${
+                    highestPrice
+                      ? (highestPrice * MAX_BID_PERCENTAGE).toFixed(2)
+                      : (item.startingPrice * MAX_BID_PERCENTAGE).toFixed(2)
                   })`}
                   className={`w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
                     bidError
@@ -541,6 +550,7 @@ export const ItemDetails = function () {
                       : "border-slate-200 focus:ring-amber-500"
                   }`}
                   min={highestPrice ? highestPrice + 1 : item.startingPrice + 1}
+                  max={highestPrice ? highestPrice * MAX_BID_PERCENTAGE : item.startingPrice * MAX_BID_PERCENTAGE}
                   step="1"
                   disabled={isSubmittingBid}
                 />
@@ -781,15 +791,15 @@ export const ItemDetails = function () {
                   {/* Place Bid button */}
                   <button
                     className={`flex-1 py-4 rounded-xl flex items-center justify-center space-x-2 transition-colors shadow-sm 
-                    ${isOwner || isDisabled
+                    ${isOwner || isDisabled || highestBidder?.id === Number(userId)
                       ? "bg-slate-200 text-slate-500 cursor-not-allowed"
                       : "bg-amber-500 text-white hover:bg-amber-600 shadow-amber-200"
                     }`}
                     onClick={handlePlaceBid}
-                    disabled={isOwner || isDisabled}
+                    disabled={isOwner || isDisabled || highestBidder?.id === Number(userId)}
                   >
                     <FaHandHoldingUsd />
-                    <span>{highestBidder?.id === Number(userId) ? "Extend Bid" : "Place Bid"}</span>
+                    <span>Place Bid</span>
                   </button>
                   
                   {/* Buy Item button (for winners) */}

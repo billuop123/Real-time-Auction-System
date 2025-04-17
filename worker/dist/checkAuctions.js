@@ -50,6 +50,6 @@ const checkEndedAuctions = () => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 // Run the check every minute
-setInterval(checkEndedAuctions, 60000);
+setInterval(checkEndedAuctions, 30000);
 // Run immediately on startup
 checkEndedAuctions().catch(console.error);

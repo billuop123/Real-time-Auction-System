@@ -1,8 +1,14 @@
 import axios from "axios";
 
 export const getItems = async function () {
+
   const response = await axios.get(
-    "http://localhost:3001/api/v1/item/allItems"
+    "http://localhost:3001/api/v1/item/allItems",
+    {
+      headers: {
+        Authorization: sessionStorage.getItem("jwt"),
+      },
+    }
   );
   return response;
 };
@@ -17,7 +23,11 @@ export const loggedIn = async function (jwt: string | null) {
 export const userProfile = async function (userId: string | null) {
   const response = await axios.post(
     "http://localhost:3001/api/v1/user/userprofile",
-    { userId }
+    { userId },{
+      headers:{
+        Authorization: sessionStorage.getItem("jwt"),
+      }
+    }
   );
   return response;
 };
@@ -44,14 +54,22 @@ export const fetchSearch = async function (
 };
 export const fetchNotifications = async function (userId: string | null) {
   const response = await axios.get(
-    `http://localhost:3001/api/v1/notification/${userId}`
+    `http://localhost:3001/api/v1/notification/${userId}`,{
+      headers:{
+        Authorization: sessionStorage.getItem("jwt"),
+      }
+    }
   );
   return response;
 };
 export const getUserInfo = async function (userId: string) {
   const { data } = await axios.post(
     "http://localhost:3001/api/v1/user/getuserinfo",
-    { userId }
+    { userId },{
+      headers:{
+        Authorization: sessionStorage.getItem("jwt"),
+      }
+    }
   );
   return data;
 };
@@ -60,6 +78,10 @@ export const updateNotifications = async function (userId: string | null) {
     "http://localhost:3001/api/v1/notification/clearnotifications",
     {
       userId,
+    },{
+      headers:{
+        Authorization: sessionStorage.getItem("jwt"),
+      }
     }
   );
 };
@@ -79,13 +101,21 @@ export const addItems = async function (formDataToSend:any, token: string | null
 export const itemDetails = async function (id: string | undefined) {
   const {
     data: { item },
-  } = await axios.get(`http://localhost:3001/api/v1/item/${id}`);
+  } = await axios.get(`http://localhost:3001/api/v1/item/${id}`,{
+    headers:{
+      Authorization: sessionStorage.getItem("jwt"),
+    }
+  });
   return item;
 };
 export const HighestBidderInfo = async function (id: string | undefined) {
   const {
     data: { HighestBidder, HighestPrice, secondHighestBid },
-  } = await axios.get(`http://localhost:3001/api/v1/bid/highest-bidder/${id}`);
+  } = await axios.get(`http://localhost:3001/api/v1/bid/highest-bidder/${id}`,{
+    headers:{
+      Authorization: sessionStorage.getItem("jwt"),
+    }
+  });
   return { HighestBidder, HighestPrice, secondHighestBid };
 };
 export const addBid = async function (
@@ -97,6 +127,10 @@ export const addBid = async function (
     bidAmount: numericBid,
     userId,
     auctionId: Number(id),
+  },{
+    headers:{
+      Authorization: sessionStorage.getItem("jwt"),
+    }
   });
   return response.data;
 };
@@ -105,10 +139,14 @@ export const newNotification = async function (
   id: String | undefined
 ) {
  
-  if(secondHighestBid.toString()==id?.toString()) return;
   await axios.post(
     `http://localhost:3001/api/v1/notification/new-notification`,
-    { userId: secondHighestBid, auctionId: Number(id) }
+    { userId: secondHighestBid, auctionId: Number(id) },
+    {
+      headers:{
+        Authorization: sessionStorage.getItem("jwt"),
+      }
+    }
   );
 };
 export const signup = async function (formData:any) {
@@ -130,7 +168,13 @@ export const signin = async function (formData:any) {
 };
 export const resubmitItem = async function (itemId: string | undefined) {
   const response = await axios.post(
-    `http://localhost:3001/api/v1/admin/items/${itemId}/resubmit`
+    `http://localhost:3001/api/v1/admin/items/${itemId}/resubmit`,
+    {},
+    {
+      headers: {
+        Authorization: sessionStorage.getItem("jwt")
+      }
+    }
   );
   return response;
 };

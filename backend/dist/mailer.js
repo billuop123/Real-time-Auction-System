@@ -22,7 +22,6 @@ const sendEmail = (options) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const hashedToken = yield bcryptjs_1.default.hash(options.userId.toString(), 10);
         if (options.emailType === "VERIFY") {
-            // Update user record based on email type
             const updateData = {
                 verifiedToken: hashedToken,
                 verifiedTokenExpiry: new Date(Date.now() + 36000000),
@@ -42,17 +41,15 @@ const sendEmail = (options) => __awaiter(void 0, void 0, void 0, function* () {
                 data: updateData,
             });
         }
-        // Configure Gmail SMTP Transport
         const transport = nodemailer_1.default.createTransport({
             host: process.env.SMTP_HOST,
             port: parseInt(process.env.SMTP_PORT || "465"),
-            secure: true, // Use SSL
+            secure: true,
             auth: {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASS,
             },
         });
-        // Email Content
         let subject = "";
         let html = "";
         switch (options.emailType) {
@@ -84,14 +81,12 @@ const sendEmail = (options) => __awaiter(void 0, void 0, void 0, function* () {
         `;
                 break;
         }
-        // Mail Options
         const mailOptions = {
             from: `"Auction system" <${process.env.SMTP_USER}>`,
             to: options.email,
             subject,
             html,
         };
-        // Send Email
         const mailResponse = yield transport.sendMail(mailOptions);
         return mailResponse;
     }

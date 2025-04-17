@@ -56,7 +56,9 @@ export const AdminUserDetails: React.FC = () => {
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/api/v1/admin/users/${userId}`);
+        const response = await axios.get(`http://localhost:3001/api/v1/admin/users/${userId}`,{
+         
+        });
         setUser(response.data.user);
         setLoading(false);
       } catch (err) {

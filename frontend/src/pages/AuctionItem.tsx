@@ -20,7 +20,7 @@ type AuctionItemFormState = {
 export const AuctionItem: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const token = sessionStorage.getItem("token");
+  const token = sessionStorage.getItem("jwt");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const userId = useInfo();
   const handleFormSubmit = async (formData: AuctionItemFormState) => {

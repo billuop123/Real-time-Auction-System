@@ -271,6 +271,7 @@ export const ItemDetails = function () {
   };
 
   const handlePlaceBid = () => {
+    console.log('handlePlaceBid called');
     setShowBidInput(true);
   };
 
@@ -330,8 +331,20 @@ export const ItemDetails = function () {
   };
   
   const submitBid = async () => {
+    console.log('submitBid called with:', {
+      bidAmount,
+      userId,
+      highestPrice,
+      itemStartingPrice: item?.startingPrice,
+      isOwner,
+      isDisabled
+    });
+    
     const numericBid = Number(bidAmount);
-    if (!userId) return;
+    if (!userId) {
+      console.log('No userId, returning');
+      return;
+    }
     
     setIsSubmittingBid(true);
     setBidError("");
@@ -339,19 +352,19 @@ export const ItemDetails = function () {
     try {
       if (highestPrice) {
         if (numericBid > highestPrice) {
+          console.log('Submitting bid higher than current highest price');
           const response = await addBid(numericBid, userId, id);
           
-          // Update UI with the processed bid information
+          console.log('Bid response:', response);
           setHighestBidder(response.highestBidder);
           setHighestPrice(Number(response.highestPrice));
           setPreviousHighestBidder(Number(response.secondHighestBid));
           setNoBids(false);
           
-          if (response.secondHighestBid) {
+          if (response.secondHighestBid && Number(highestBidder?.id) !== Number(userId)) {
             await newNotification(response.secondHighestBid, id);
           }
           
-          // Send WebSocket message to other clients
           if (socket && isWebSocketConnected) {
             socket.send(
               JSON.stringify({
@@ -364,17 +377,17 @@ export const ItemDetails = function () {
           }
           toast.success("Bid successfully placed!");
         } else {
+          console.log('Bid amount too low compared to highest price');
           setBidError(`Bid must be higher than Rs ${highestPrice.toFixed(2)}`);
         }
       } else if (numericBid > item!.startingPrice) {
+        console.log('Submitting first bid higher than starting price');
         const response = await addBid(numericBid, userId, id);
-        
-        // Update UI with the processed bid information
+ 
         setHighestBidder(response.highestBidder);
         setHighestPrice(Number(response.highestPrice));
         setNoBids(false);
-        
-        // Send WebSocket message to other clients
+ 
         if (socket && isWebSocketConnected) {
           socket.send(
             JSON.stringify({
@@ -386,17 +399,19 @@ export const ItemDetails = function () {
         }
         toast.success("Bid successfully placed!");
       } else {
+        console.log('Bid amount too low compared to starting price');
         setBidError(`Bid must be higher than Rs ${item!.startingPrice.toFixed(2)}`);
       }
     } catch (error) {
       console.error("Bid submission failed", error);
       setBidError("Failed to submit bid. Please try again.");
       toast.error("Failed to place bid.");
-    }
-    setIsSubmittingBid(false);
-    if (!bidError) {
-      setShowBidInput(false);
-      setBidAmount("");
+    } finally {
+      setIsSubmittingBid(false);
+      if (!bidError) {
+        setShowBidInput(false);
+        setBidAmount("");
+      }
     }
   };
 
@@ -436,7 +451,7 @@ export const ItemDetails = function () {
       setIsResubmitting(true);
       await resubmitItem(id);
       toast.success("Item resubmitted for approval");
-      // Refresh item details
+
       const updatedItem = await itemDetails(id);
       setItem(updatedItem);
     } catch (error) {
@@ -469,10 +484,16 @@ export const ItemDetails = function () {
         >
           <div
             className="bg-white rounded-2xl shadow-2xl p-8 w-96 relative transform transition-all duration-300 ease-in-out"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              console.log('Modal content clicked');
+              e.stopPropagation();
+            }}
           >
             <button
-              onClick={() => !isSubmittingBid && setShowBidInput(false)}
+              onClick={() => {
+                console.log('Close button clicked');
+                !isSubmittingBid && setShowBidInput(false);
+              }}
               className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 transition-colors"
               disabled={isSubmittingBid}
             >
@@ -505,7 +526,10 @@ export const ItemDetails = function () {
                 <input
                   type="number"
                   value={bidAmount}
-                  onChange={handleBidChange}
+                  onChange={(e) => {
+                    console.log('Bid amount changed:', e.target.value);
+                    handleBidChange(e);
+                  }}
                   placeholder={`Enter bid (Min: Rs ${
                     highestPrice
                       ? (highestPrice + 1).toFixed(2)
@@ -538,7 +562,10 @@ export const ItemDetails = function () {
 
               <div className="flex space-x-4 mt-6">
                 <button
-                  onClick={() => setShowBidInput(false)}
+                  onClick={() => {
+                    console.log('Cancel button clicked');
+                    setShowBidInput(false);
+                  }}
                   className="flex-1 py-3 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition"
                   disabled={isSubmittingBid}
                 >
@@ -546,14 +573,47 @@ export const ItemDetails = function () {
                 </button>
 
                 <button
-                  onClick={submitBid}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Submit button clicked, current state:', {
+                      bidAmount,
+                      highestPrice,
+                      itemStartingPrice: item?.startingPrice,
+                      isOwner,
+                      isDisabled,
+                      isSubmittingBid,
+                      numericBid: Number(bidAmount)
+                    });
+                    submitBid();
+                  }}
                   disabled={
-                    isOwner ||
-                    Number(bidAmount) <= highestPrice ||
-                    Number(bidAmount) <= Number(item.startingPrice) ||
-                    isDisabled ||
-                    !bidAmount ||
-                    isSubmittingBid
+                    (() => {
+                      const numericBid = Number(bidAmount);
+                      const isBidValid = highestPrice 
+                        ? numericBid > highestPrice 
+                        : numericBid > Number(item.startingPrice);
+                      
+                      const disabled = isOwner ||
+                        !isBidValid ||
+                        isDisabled ||
+                        !bidAmount ||
+                        isSubmittingBid;
+                      
+                      console.log('Submit button disabled state:', {
+                        isOwner,
+                        bidAmount,
+                        highestPrice,
+                        itemStartingPrice: item?.startingPrice,
+                        isDisabled,
+                        isSubmittingBid,
+                        numericBid,
+                        isBidValid,
+                        finalDisabled: disabled
+                      });
+                      
+                      return disabled;
+                    })()
                   }
                   className={`flex-1 py-3 rounded-lg transition ${
                     bidError || !bidAmount || isOwner || isDisabled || isSubmittingBid

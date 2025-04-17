@@ -8,14 +8,15 @@ import {
   userProfile,
 } from "../controller/userController";
 import { prisma } from "../prismaClient";
+import { authMiddleware } from "../middlewares/authmiddleware";
 
 export const userRouter = express();
 const upload = cloudinarySetup();
 userRouter.post("/signup", upload.single("file"), signup);
 userRouter.post("/login", login);
 userRouter.post("/loggedin", loggedIn);
-userRouter.post("/getuserinfo", getUserInfo);
-userRouter.post("/userProfile", userProfile);
+userRouter.post("/getuserinfo", authMiddleware,getUserInfo);
+userRouter.post("/userProfile", authMiddleware,userProfile);
 userRouter.post("/verifyemail",verifyEmail)
 userRouter.post("/resendverificationemail",resendVerificationEmail)
 userRouter.post("/isVerified",isVerified)

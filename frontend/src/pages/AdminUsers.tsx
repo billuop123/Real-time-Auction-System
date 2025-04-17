@@ -48,7 +48,11 @@ export const AdminUsers: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get("http://localhost:3001/api/v1/admin/users");
+      const response = await axios.get("http://localhost:3001/api/v1/admin/users",{
+        headers:{
+          Authorization: sessionStorage.getItem("jwt"),
+        }
+      });
       setUsers(response.data.users);
       setLoading(false);
     } catch (err) {
@@ -71,7 +75,11 @@ export const AdminUsers: React.FC = () => {
     if (!selectedUser) return;
 
     try {
-      await axios.delete(`http://localhost:3001/api/v1/admin/users/${selectedUser.id}`);
+      await axios.delete(`http://localhost:3001/api/v1/admin/users/${selectedUser.id}`,{
+        headers:{
+          Authorization: sessionStorage.getItem("jwt"),
+        }
+      });
       toast.success('User deleted successfully');
       setUsers(users.filter(user => user.id !== selectedUser.id));
     } catch (error) {

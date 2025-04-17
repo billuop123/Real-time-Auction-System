@@ -29,7 +29,11 @@ export const UserItems = () => {
   useEffect(() => {
     const fetchUserItems = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/api/v1/user/items/${userId}`);
+        const response = await axios.get(`http://localhost:3001/api/v1/user/items/${userId}`,{
+          headers:{
+            Authorization: sessionStorage.getItem("jwt"),
+          }
+        });
         setItems(response.data.items);
       } catch (error) {
         console.error("Error fetching user items:", error);

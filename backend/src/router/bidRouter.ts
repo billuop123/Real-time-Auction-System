@@ -1,11 +1,12 @@
 import express from "express";
 
-import { getHighestBidder } from "../controller/bidController";
+import { addBid, getHighestBidder } from "../controller/bidController";
+import { authMiddleware } from "../middlewares/authmiddleware";
 
 
 
 export const bidRouter = express();
 
-bidRouter.post("/addBid", );
+bidRouter.post("/addBid",authMiddleware,addBid );
 
-bidRouter.get("/highest-bidder/:auctionId", getHighestBidder);
+bidRouter.get("/highest-bidder/:auctionId", authMiddleware,getHighestBidder);

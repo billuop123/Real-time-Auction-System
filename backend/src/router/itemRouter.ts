@@ -10,18 +10,14 @@ import {
 
   getItem,
 } from "../controller/itemController";
-import { sendEmail } from "../mailer";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
-
+import { authMiddleware } from "../middlewares/authmiddleware";
 export const itemRouter = express();
 const upload = cloudinarySetup();
-itemRouter.post("/additem", upload.single("photo"), addItem);
-itemRouter.get("/allItems", allItems);
-itemRouter.get("/featured", getFeaturedItems);
-itemRouter.get("/:id", getItem);
-itemRouter.delete("/:id", deleteItem);
+itemRouter.post("/additem", authMiddleware,upload.single("photo"), addItem);
+itemRouter.get("/allItems",allItems);
+itemRouter.get("/featured",getFeaturedItems);
+itemRouter.get("/:id", authMiddleware,getItem);
+itemRouter.delete("/:id", authMiddleware,deleteItem);
 
 
 itemRouter.post("/contact-seller", contactSeller);

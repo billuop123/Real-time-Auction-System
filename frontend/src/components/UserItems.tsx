@@ -80,7 +80,11 @@ export const UserItems: React.FC = () => {
       const optimisticUpdate = items.filter((item) => item.id !== itemId);
       setItems(optimisticUpdate);
 
-      await axios.delete(`http://localhost:3001/api/v1/item/${itemId}`);
+      await axios.delete(`http://localhost:3001/api/v1/item/${itemId}`,{
+        headers:{
+          Authorization:sessionStorage.getItem("jwt"),
+        }
+      });
       toast.success("Item deleted successfully");
     } catch (error) {
       const fetchUserItems = async () => {
@@ -131,6 +135,10 @@ export const UserItems: React.FC = () => {
       setIsResubmitting(true);
       const response = await axios.post(`http://localhost:3001/api/v1/admin/items/${selectedItem.id}/resubmit`, {
         deadline: newDeadline.toISOString()
+      },{
+        headers:{
+          Authorization:sessionStorage.getItem("jwt"),
+        }
       });
       
       // Update the item's status and deadline in the local state

@@ -2,7 +2,7 @@ import { sendEmail } from "../mailer";
 import { prisma } from "../prismaClient";
 
 export const addItem = async (req: any, res: any) => {
-  const {
+  let {
     name,
     description,
     photo,
@@ -11,7 +11,9 @@ export const addItem = async (req: any, res: any) => {
     userId,
     category,
   } = req.body;
-
+  if(!category){
+    category="OTHERS";
+  }
   const uploadedFile = req?.file;
   const photoPath = uploadedFile?.path || "default-placeholder-url";
   const defaultCategories = ["OTHERS"];

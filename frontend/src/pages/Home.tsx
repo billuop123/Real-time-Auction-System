@@ -13,7 +13,7 @@ export const Home = function () {
   const [showFilters, setShowFilters] = useState(false);
   const { items: allItems, setItems } = useSearch();
   const [featuredItems,setFeaturedItems]=useState([]);
-  // Categories for the website
+
   const categories = [
     { value: "", label: "All Categories" },
     { value: "electronics", label: "Electronics" },
@@ -118,7 +118,11 @@ export const Home = function () {
   
   useEffect(()=>{
     const fetchFeaturedItems=async()=>{
-      const response=await axios.get("http://localhost:3001/api/v1/item/featured");
+      const response=await axios.get("http://localhost:3001/api/v1/item/featured",{
+        headers:{
+          Authorization:sessionStorage.getItem("jwt"),
+        }
+      });
       setFeaturedItems(response.data.featuredItems);
     }
     fetchFeaturedItems();
@@ -233,7 +237,7 @@ export const Home = function () {
                       <h3 className="text-white font-medium mb-1 truncate">{item.name}</h3>
                       <p className="text-slate-400 text-sm mb-3 line-clamp-2">{item.description}</p>
                       <div className="flex justify-between items-center">
-                        <span className="text-amber-500 font-bold">${item.startingPrice}</span>
+                        <span className="text-amber-500 font-bold">₹{item.startingPrice}</span>
                         <span className="text-slate-300 text-sm flex items-center">
                           <FaClock className="mr-1 text-xs" /> Ends Soon
                         </span>

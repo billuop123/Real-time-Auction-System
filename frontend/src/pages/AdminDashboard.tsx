@@ -67,7 +67,11 @@ export const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const response = await axios.get<{ allItems: Item[] }>("http://localhost:3001/api/v1/item/allItems")
+        const response = await axios.get<{ allItems: Item[] }>("http://localhost:3001/api/v1/item/allItems",{
+          headers:{
+            Authorization:sessionStorage.getItem("jwt"),
+          }
+        })
 
         setItems(response.data.allItems)
         setLoading(false)
@@ -95,7 +99,11 @@ export const AdminDashboard: React.FC = () => {
     
     setIsUpdating(true)
     try {
-      await axios.post(`http://localhost:3001/api/v1/admin/items/${itemId}/approve`)
+      await axios.post(`http://localhost:3001/api/v1/admin/items/${itemId}/approve`, {}, {
+        headers: {
+          Authorization: sessionStorage.getItem("jwt"),
+        }
+      })
       
       // Update item status in state
       setItems(prevItems => prevItems.map(item => 
@@ -116,7 +124,11 @@ export const AdminDashboard: React.FC = () => {
     
     setIsUpdating(true)
     try {
-      await axios.post(`http://localhost:3001/api/v1/admin/disapprove/${itemId}`)
+      await axios.post(`http://localhost:3001/api/v1/admin/disapprove/${itemId}`, {}, {
+        headers: {
+          Authorization: sessionStorage.getItem("jwt"),
+        }
+      })
       
       // Update item status in state
       setItems(prevItems => prevItems.map(item => 
@@ -155,15 +167,18 @@ export const AdminDashboard: React.FC = () => {
 
       const newFeaturedStatus = !item.featured
    
-      
       // Make API call with explicit status value
       const response = await axios.post(`http://localhost:3001/api/v1/admin/featured/${itemId}`, {
         featured: newFeaturedStatus
+      }, {
+        headers: {
+          Authorization: sessionStorage.getItem("jwt")
+        }
       })
       
-      // Only update state if API call was successful
+
       if (response.status === 200) {
-        // Use the functional update pattern to avoid issues with stale state
+      
         setItems(prevItems => prevItems.map(prevItem => 
           prevItem.id === itemId 
             ? { ...prevItem, featured: newFeaturedStatus } 

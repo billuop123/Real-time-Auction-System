@@ -12,23 +12,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cloudinarySetup = cloudinarySetup;
-const multer_1 = __importDefault(require("multer"));
-const multer_storage_cloudinary_1 = require("multer-storage-cloudinary");
-const cloudinary_1 = require("cloudinary");
-function cloudinarySetup() {
-    cloudinary_1.v2.config({
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET,
-    });
-    const storage = new multer_storage_cloudinary_1.CloudinaryStorage({
-        cloudinary: cloudinary_1.v2,
-        params: {
-            folder: "my-folder",
-            format: () => __awaiter(this, void 0, void 0, function* () { return "png"; }),
-        },
-    });
-    const upload = (0, multer_1.default)({ storage });
-    return upload;
-}
+exports.authMiddleware = void 0;
+const config_1 = require("../config");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const authMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const jwtT = req.headers.authorization;
+    if (!jsonwebtoken_1.default) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+    console.log(jsonwebtoken_1.default);
+    try {
+        const decoded = jsonwebtoken_1.default.verify(jwtT, config_1.JWT_SECRET);
+        console.log("-------");
+        console.log(decoded);
+        req.user = decoded;
+        next();
+    }
+    catch (error) {
+        return res.status(401).json({ message: "Unauthorized",
+            error: `${error.message}`
+        });
+    }
+});
+exports.authMiddleware = authMiddleware;

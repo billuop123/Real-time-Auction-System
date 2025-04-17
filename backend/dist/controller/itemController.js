@@ -9,10 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getFeaturedItems = exports.deleteItem = exports.getItem = exports.allItems = exports.addItem = void 0;
+exports.contactSeller = exports.getFeaturedItems = exports.deleteItem = exports.getItem = exports.allItems = exports.addItem = void 0;
+const mailer_1 = require("../mailer");
 const prismaClient_1 = require("../prismaClient");
 const addItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name, description, photo, deadline, startingPrice, userId, category, } = req.body;
+    let { name, description, photo, deadline, startingPrice, userId, category, } = req.body;
+    if (!category) {
+        category = "OTHERS";
+    }
     const uploadedFile = req === null || req === void 0 ? void 0 : req.file;
     const photoPath = (uploadedFile === null || uploadedFile === void 0 ? void 0 : uploadedFile.path) || "default-placeholder-url";
     const defaultCategories = ["OTHERS"];
@@ -200,3 +204,41 @@ const getFeaturedItems = (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.getFeaturedItems = getFeaturedItems;
+const contactSeller = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { itemId, buyerId, message } = req.body;
+    try {
+        // Get item and seller details
+        const item = yield prismaClient_1.prisma.auctionItems.findUnique({
+            where: { id: Number(itemId) },
+            include: { user: true }
+        });
+        if (!item) {
+            return res.status(404).json({ error: "Item not found" });
+        }
+        // Get buyer details
+        const buyer = yield prismaClient_1.prisma.user.findUnique({
+            where: { id: Number(buyerId) }
+        });
+        if (!buyer) {
+            return res.status(404).json({ error: "Buyer not found" });
+        }
+        // Send email to seller
+        yield (0, mailer_1.sendEmail)({
+            email: item.user.email,
+            emailType: "CONTACT",
+            userId: item.userId.toString(),
+            buyerName: buyer.name,
+            buyerEmail: buyer.email,
+            itemName: item.name,
+            message: message
+        });
+        return res.json({
+            message: "Contact request sent successfully"
+        });
+    }
+    catch (error) {
+        console.error("Error contacting seller:", error);
+        return res.status(500).json({ error: "Failed to send contact request" });
+    }
+});
+exports.contactSeller = contactSeller;

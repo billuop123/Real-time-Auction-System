@@ -46,17 +46,6 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                                 auctionId: data.auctionId
                             }
                         });
-                        // Update the auction's current price if the new bid is higher
-                        const auction = yield prismaClient_1.prisma.auctionItems.findUnique({
-                            where: { id: data.auctionId }
-                        });
-                        if (auction && data.price > auction.startingPrice) {
-                            yield prismaClient_1.prisma.auctionItems.update({
-                                where: { id: data.auctionId },
-                                data: { startingPrice: data.price }
-                            });
-                            console.log(`Updated auction ${data.auctionId} price to ${data.price}`);
-                        }
                         console.log('Bid processed successfully:', bid);
                     }
                     catch (error) {

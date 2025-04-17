@@ -44,19 +44,6 @@ const run = async () => {
               }
             });
 
-            // Update the auction's current price if the new bid is higher
-            const auction = await prisma.auctionItems.findUnique({
-              where: { id: data.auctionId }
-            });
-
-            if (auction && data.price > auction.startingPrice) {
-              await prisma.auctionItems.update({
-                where: { id: data.auctionId },
-                data: { startingPrice: data.price }
-              });
-              console.log(`Updated auction ${data.auctionId} price to ${data.price}`);
-            }
-
             console.log('Bid processed successfully:', bid);
           } catch (error) {
             console.error('Error processing bid:', error);

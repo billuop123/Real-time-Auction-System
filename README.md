@@ -124,10 +124,12 @@ EMAIL_SERVICE_API_KEY=your_email_api_key
 
 4. Start the development servers:
 ```bash
-# Using Docker (recommended)
-docker-compose up
+
 
 # Or manually
+#Start Kafka
+docker-compose up
+
 # Start backend
 cd backend
 npm run dev
@@ -135,6 +137,14 @@ npm run dev
 # Start frontend
 cd frontend
 npm run dev
+
+# Start Worker(bid-processing)
+cd worker
+npm run dev:bid 
+
+#Start Worker (auction win notification)
+cd worker
+npm run dev:check-auctions
 ```
 
 ## Key Features Implementation

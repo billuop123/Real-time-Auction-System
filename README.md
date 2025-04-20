@@ -117,9 +117,16 @@ VITE_API_URL=http://localhost:3001
 VITE_WS_URL=ws://localhost:3001
 
 # Backend (.env)
-DATABASE_URL="postgresql://user:password@localhost:5432/auction_db"
-JWT_SECRET=your_jwt_secret
-EMAIL_SERVICE_API_KEY=your_email_api_key
+PORT=3001
+DATABASE_URL="postgresql://postgres:your_password@localhost:5432/somedb"
+CLOUDINARY_CLOUD_NAME="cloudinary_cloud_name"
+CLOUDINARY_API_SECRET="cloudinary_secret"
+CLOUDINARY_API_KEY="cloudinary_apikey"
+KHALTI_SECRET_KEY="khalti_secret_key"
+SMTP_PASS=smtp_pass
+SMTP_USER=user@gmail.com
+SMTP_HOST=smtp.gmail.com
+domain="http://localhost:5173"
 ```
 
 4. Start the development servers:

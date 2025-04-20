@@ -26,12 +26,11 @@ export const createPayment = async (req: any, res: any) => {
         { headers }
       );
   
-      // ✅ Store `pidx` with `auctionId` in the database
       await prisma.payment.create({
         data: {
          
-          pidx: response.data.pidx, // Save pidx from Khalti
-          auctionId: String(formData.purchase_order_id), // Save auction ID
+          pidx: response.data.pidx, 
+          auctionId: String(formData.purchase_order_id), 
         },
       });
   
@@ -74,10 +73,10 @@ export const createPayment = async (req: any, res: any) => {
           return res.status(400).json({ message: "No matching payment found" });
         }
   
-        // ✅ Update the auction item status
+
         await prisma.auctionItems.update({
           where: {
-            id: Number(paymentRecord.auctionId), // Use the auction ID from the database
+            id: Number(paymentRecord.auctionId), 
           },
           data: {
             status: "SOLD",

@@ -34,11 +34,10 @@ const callKhalti = (formData, req, res) => __awaiter(void 0, void 0, void 0, fun
     };
     try {
         const response = yield axios_1.default.post("https://a.khalti.com/api/v2/epayment/initiate/", formData, { headers });
-        // ✅ Store `pidx` with `auctionId` in the database
         yield prismaClient_1.prisma.payment.create({
             data: {
-                pidx: response.data.pidx, // Save pidx from Khalti
-                auctionId: String(formData.purchase_order_id), // Save auction ID
+                pidx: response.data.pidx,
+                auctionId: String(formData.purchase_order_id),
             },
         });
         res.json({
@@ -69,10 +68,9 @@ const khaltiCallback = (req, res) => __awaiter(void 0, void 0, void 0, function*
             if (!paymentRecord) {
                 return res.status(400).json({ message: "No matching payment found" });
             }
-            // ✅ Update the auction item status
             yield prismaClient_1.prisma.auctionItems.update({
                 where: {
-                    id: Number(paymentRecord.auctionId), // Use the auction ID from the database
+                    id: Number(paymentRecord.auctionId),
                 },
                 data: {
                     status: "SOLD",

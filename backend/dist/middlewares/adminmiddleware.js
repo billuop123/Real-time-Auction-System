@@ -23,9 +23,6 @@ const adminMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
     console.log(jwtT);
     try {
         const decoded = jsonwebtoken_1.default.verify(jwtT, config_1.JWT_SECRET);
-        console.log("-------");
-        //@ts-ignore
-        console.log(decoded.role);
         //@ts-ignore
         if (decoded.role != "ADMIN") {
             return res.status(401).json({ message: "Unauthorized" });

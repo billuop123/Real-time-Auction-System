@@ -9,9 +9,7 @@ export const adminMiddleware=async (req:any, res:any, next:any)=>{
     console.log(jwtT);
     try{
         const decoded=jwt.verify(jwtT, JWT_SECRET);
-        console.log("-------")
-        //@ts-ignore
-        console.log(decoded.role);
+     
         //@ts-ignore
         if(decoded.role!="ADMIN"){
             return res.status(401).json({message:"Unauthorized"});

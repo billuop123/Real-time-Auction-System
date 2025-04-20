@@ -23,7 +23,6 @@ const authMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
     console.log(jsonwebtoken_1.default);
     try {
         const decoded = jsonwebtoken_1.default.verify(jwtT, config_1.JWT_SECRET);
-        console.log("-------");
         console.log(decoded);
         req.user = decoded;
         next();

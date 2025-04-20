@@ -38,7 +38,6 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                 if (topic === 'bids') {
                     console.log('Processing bid:', data);
                     try {
-                        // Process the bid
                         const bid = yield prismaClient_1.prisma.bids.create({
                             data: {
                                 price: data.price,
@@ -56,19 +55,16 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                     console.log('Processing auction end:', data);
                     try {
                         const { auctionId } = data;
-                        // Get the highest bidder
                         const highestBid = yield prismaClient_1.prisma.bids.findFirst({
                             where: { auctionId },
                             orderBy: { price: 'desc' },
                             include: { user: true }
                         });
                         if (highestBid) {
-                            // Update auction status to WON
                             const auction = yield prismaClient_1.prisma.auctionItems.update({
                                 where: { id: Number(auctionId) },
                                 data: { status: "WON" }
                             });
-                            // Create notification for the winner
                             const winner = yield prismaClient_1.prisma.notification.create({
                                 data: {
                                     userId: highestBid.userId,

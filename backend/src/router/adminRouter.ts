@@ -1,6 +1,7 @@
 import express from "express";
 import { approveItem, deleteUser, disapproveItem, featuredItem, getItemDetails, getUnapprovedItems, getUsers, resubmitItem } from "../controller/adminController";
 import { adminMiddleware } from "../middlewares/adminmiddleware";
+import { authMiddleware } from "../middlewares/authmiddleware";
 export const adminRouter = express();
 
 adminRouter.get("/users",adminMiddleware,getUsers);
@@ -10,4 +11,4 @@ adminRouter.post("/items/:itemId/approve", adminMiddleware,approveItem);
 adminRouter.post("/disapprove/:itemId",adminMiddleware,disapproveItem);
 adminRouter.post("/featured/:itemId", adminMiddleware,featuredItem);
 adminRouter.get("/items/:itemId",getItemDetails);
-adminRouter.post("/items/:itemId/resubmit", adminMiddleware,resubmitItem);
+adminRouter.post("/items/:itemId/resubmit", authMiddleware,resubmitItem);

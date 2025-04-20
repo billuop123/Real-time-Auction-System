@@ -35,7 +35,7 @@ const run = async () => {
         if (topic === 'bids') {
           console.log('Processing bid:', data);
           try {
-            // Process the bid
+       
             const bid = await prisma.bids.create({
               data: {
                 price: data.price,
@@ -53,7 +53,7 @@ const run = async () => {
           try {
             const { auctionId } = data;
             
-            // Get the highest bidder
+  
             const highestBid = await prisma.bids.findFirst({
               where: { auctionId },
               orderBy: { price: 'desc' },
@@ -61,13 +61,13 @@ const run = async () => {
             });
 
             if (highestBid) {
-              // Update auction status to WON
+          
               const auction = await prisma.auctionItems.update({
                 where: { id: Number(auctionId) },
                 data: { status: "WON" }
               });
 
-              // Create notification for the winner
+          
               const winner=await prisma.notification.create({
                 data: {
                   userId: highestBid.userId,

@@ -199,7 +199,7 @@ export const contactSeller=async (req: any, res: any) => {
   const { itemId, buyerId, message } = req.body;
   
   try {
-    // Get item and seller details
+ 
     const item = await prisma.auctionItems.findUnique({
       where: { id: Number(itemId) },
       include: { user: true }
@@ -209,7 +209,6 @@ export const contactSeller=async (req: any, res: any) => {
       return res.status(404).json({ error: "Item not found" });
     }
 
-    // Get buyer details
     const buyer = await prisma.user.findUnique({
       where: { id: Number(buyerId) }
     });
@@ -218,7 +217,6 @@ export const contactSeller=async (req: any, res: any) => {
       return res.status(404).json({ error: "Buyer not found" });
     }
 
-    // Send email to seller
     await sendEmail({
       email: item.user.email,
       emailType: "CONTACT",

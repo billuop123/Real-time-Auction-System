@@ -25,7 +25,7 @@ const checkEndedAuctions = () => __awaiter(void 0, void 0, void 0, function* () 
                 deadline: {
                     lte: now
                 },
-                status: 'PENDING' // Only check auctions that haven't been processed yet
+                status: 'PENDING'
             }
         });
         for (const auction of endedAuctions) {
@@ -49,7 +49,5 @@ const checkEndedAuctions = () => __awaiter(void 0, void 0, void 0, function* () 
         yield producer.disconnect();
     }
 });
-// Run the check every minute
 setInterval(checkEndedAuctions, 30000);
-// Run immediately on startup
 checkEndedAuctions().catch(console.error);

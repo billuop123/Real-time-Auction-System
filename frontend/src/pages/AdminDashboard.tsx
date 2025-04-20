@@ -294,7 +294,7 @@ export const AdminDashboard: React.FC = () => {
                   <TableCell>
                     <Badge variant="outline">{item.category}</Badge>
                   </TableCell>
-                  <TableCell>${item.startingPrice}</TableCell>
+                  <TableCell>Rs.{item.startingPrice}</TableCell>
                   <TableCell>
                     {format(new Date(item.deadline), 'PPpp')}
                   </TableCell>

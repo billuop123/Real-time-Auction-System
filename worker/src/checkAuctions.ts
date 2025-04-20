@@ -18,7 +18,7 @@ const checkEndedAuctions = async () => {
         deadline: {
           lte: now
         },
-        status: 'PENDING' // Only check auctions that haven't been processed yet
+        status: 'PENDING' 
       }
     });
 
@@ -42,8 +42,8 @@ const checkEndedAuctions = async () => {
   }
 };
 
-// Run the check every minute
+
 setInterval(checkEndedAuctions, 30000);
 
-// Run immediately on startup
+
 checkEndedAuctions().catch(console.error); 

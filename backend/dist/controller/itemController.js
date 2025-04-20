@@ -207,7 +207,6 @@ exports.getFeaturedItems = getFeaturedItems;
 const contactSeller = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { itemId, buyerId, message } = req.body;
     try {
-        // Get item and seller details
         const item = yield prismaClient_1.prisma.auctionItems.findUnique({
             where: { id: Number(itemId) },
             include: { user: true }
@@ -215,14 +214,12 @@ const contactSeller = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         if (!item) {
             return res.status(404).json({ error: "Item not found" });
         }
-        // Get buyer details
         const buyer = yield prismaClient_1.prisma.user.findUnique({
             where: { id: Number(buyerId) }
         });
         if (!buyer) {
             return res.status(404).json({ error: "Buyer not found" });
         }
-        // Send email to seller
         yield (0, mailer_1.sendEmail)({
             email: item.user.email,
             emailType: "CONTACT",
